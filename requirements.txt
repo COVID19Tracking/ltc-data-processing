@@ -1,0 +1,6 @@
+Flask
+gunicorn
+pytest
+flask-restful
+python-decouple
+pandas

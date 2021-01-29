@@ -1,0 +1,5 @@
+name: ltc-processing-apire
+dependencies:
+  - python=3.6
+  - pip=18.1
+  - -r file:requirements.txt
