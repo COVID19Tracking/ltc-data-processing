@@ -1,0 +1,66 @@
+version: 2.1
+
+workflows:
+  version: 2.1
+  test-and-deploy:
+    jobs:
+      - unit_test
+      - build_and_test_docker
+#      - deploy:
+#          requires:
+#            - unit_test
+#            - build_and_test_docker
+#          filters:
+#            branches:
+#              only:
+#                - main
+
+jobs:
+  unit_test:
+    docker:
+      - image: circleci/python:3.6.9
+        environment:
+          PIPENV_VENV_IN_PROJECT: true
+    steps:
+      - run: sudo apt-get update
+      - checkout
+      - run: pipenv run pip install -r requirements.txt
+      - run:
+          name: run pytest
+          command: |
+            mkdir test-results
+            pipenv run python -m pytest --junitxml=test-results/junit.xml
+
+      - store_test_results:
+          path: test-results
+
+  build_and_test_docker:
+    machine: true
+    steps:
+      - checkout
+      - run: docker build -t ltcapi .
+      - run:
+          # Bring up the container, and touch a file iff it dies cleanly
+          command: docker run ltcapi && touch .docker_exited_cleanly
+          background: true
+      # Give the container some time to come up and hang out
+      - run: sleep 3
+      # Kill it and make sure we see our file
+      - run: docker stop `docker ps | grep ltcapi | awk '{ print $1 }'`
+      - run: "[ -f .docker_exited_cleanly ]"
+      
+#  deploy:
+#    docker:
+#      - image: circleci/python:3.6.9
+#    steps:
+#      - run: sudo apt-get update
+#      - checkout
+#      - run:
+#          name: Installing deployment dependencies
+#          command: sudo pip3 install awsebcli
+#      - run:
+#          name: Deploying
+#          # Create a new application version and deploy it to staging.
+#          # See https://github.com/COVID19Tracking/covid-publishing-api/blob/master/DEPLOY.md for more details.
+#          # Note that if we ever want more control, e.g. the ability to create a new application version without pushing to staging, we can't use the `eb` CLI anymore: https://stackoverflow.com/questions/43261949/elastic-beanstalk-cli-upload-version-without-deployingt
+#          command: eb deploy stage
