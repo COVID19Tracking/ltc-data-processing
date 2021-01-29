@@ -11,3 +11,9 @@ def echo():
     """Dummy route that returns the input data unaltered"""
     payload = flask.request.data
     return Response(payload, mimetype='text/csv')
+
+
+# Basic URL to hit as a test
+@api.route('/test', methods=['GET'])
+def test():
+    return "Hello World"
