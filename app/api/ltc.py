@@ -95,7 +95,7 @@ def preclean_FL(df):
     df['County'] = df['County'].apply(process_county)
 
 
-def process_df(df):
+def collapse_outbreak_rows(df):
     col_map = make_matching_column_name_map(df)
     # group by facility name and date, collapse each group into one row
     processed_df = df.groupby(
@@ -144,7 +144,7 @@ def aggregate_outbreaks():
     standardize_data(df)
 
     t1 = time()
-    processed_df = process_df(df)
+    processed_df = collapse_outbreak_rows(df)
     t2 = time()
 
     # this will go into the lambda logs
