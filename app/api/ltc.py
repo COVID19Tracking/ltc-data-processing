@@ -56,9 +56,10 @@ def collapse_rows_new_header_names(df_group, col_map):
     if new_df_subset.shape[0] > 1:
         deduped = new_df_subset.drop_duplicates()
         if deduped.shape[0] > 1:
-            print('Multiple open outbreak rows with different data: %s' % row_descriptor)
+            flask.current_app.logger.info(
+                'Multiple open outbreak rows with different data: %s' % row_descriptor)
         else:
-            print('Duplicate open outbreak rows: %s' % row_descriptor)
+            flask.current_app.logger.info('Duplicate open outbreak rows: %s' % row_descriptor)
             
         return df_group
 
@@ -74,8 +75,9 @@ def collapse_rows_new_header_names(df_group, col_map):
                 index = list(df_group.columns).index(colname)
                 new_df_subset.iat[0,index] = val
         except ValueError:  # some date fields in numeric places, return group without collapsing
-            print('Some non-numeric fields in numeric places, column %s: %s' % (
-                colname, row_descriptor))
+            flask.current_app.logger.info(
+                'Some non-numeric fields in numeric places, column %s: %s' % (
+                    colname, row_descriptor))
             return df_group
 
     return new_df_subset
