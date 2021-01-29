@@ -19,3 +19,9 @@ app = create_app(config_dict[env_config]())
 # for production, require a real SECRET_KEY to be set
 if env_config == 'production':
     assert app.config['SECRET_KEY'] != "12345", "You must set a secure SECRET_KEY"
+
+
+@app.cli.command()
+def deploy():
+    """Run deployment tasks."""
+    return  # we have no deployment tasks
