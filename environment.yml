@@ -1,4 +1,4 @@
-name: ltc-processing-apire
+name: ltc-data-processing
 dependencies:
   - python=3.6
   - pip=18.1
