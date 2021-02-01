@@ -31,6 +31,7 @@ def deploy():
 
 
 @app.cli.command("aggregate_outbreaks")
+@click.option('-o', '--outfile')
 @click.argument("url")
-def cli_aggregate_outbreaks(url):
-    ltc.cli_aggregate_outbreaks(url)
+def cli_aggregate_outbreaks(outfile, url):
+    ltc.cli_aggregate_outbreaks(outfile, url)

@@ -164,7 +164,7 @@ def api_aggregate_outbreaks():
     return Response(processed_df.to_csv(index=False), mimetype='text/csv')
 
 
-def cli_aggregate_outbreaks(url):
+def cli_aggregate_outbreaks(outfile, url):
     # extract the parameters from the google docs url and formulate a CSV export url
     m = re.search('.*\/d\/(.*)\/edit.*#gid=(.*)', url)
     if m:
@@ -181,4 +181,7 @@ def cli_aggregate_outbreaks(url):
 
     # process it and print the result to STDOUT
     processed_df = do_aggregate_outbreaks(pd.read_csv(io.StringIO(data.decode('utf-8'))))
-    print(processed_df.to_csv(index=False))
+    if outfile:
+        processed_df.to_csv(outfile, index=False)
+    else:  # print to STDOUT
+        print(processed_df.to_csv(index=False))
