@@ -35,3 +35,10 @@ def deploy():
 @click.argument("url")
 def cli_aggregate_outbreaks(outfile, url):
     ltc.cli_aggregate_outbreaks(outfile, url)
+
+
+@app.cli.command("close_outbreaks")
+@click.option('-o', '--outfile')
+@click.argument("url")
+def cli_close_outbreaks(outfile, url):
+    ltc.cli_close_outbreaks_nm_ar(outfile, url)

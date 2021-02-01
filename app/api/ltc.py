@@ -6,16 +6,14 @@ several outbreaks.
 """
 
 import io
-import re
 import urllib
 from time import time
 
-import click
 import flask
-from flask import Response, Flask
+from flask import Response
 import pandas as pd
 
-from app.api import api
+from app.api import api, utils
 
 
 # Uppercases county/city/facility/outbreak status entries, for easier comparison. Modifies in place
@@ -129,14 +127,17 @@ def add_info(record, last_collected, all_data, current_date):
 
     return record
 
+
 def add_last_reported_now(record, date):
     record['last_recorded'] = date
     return record
+
 
 def copy_row(new_row, old_row):
     for c in old_row.columns:
         new_row[c] = old_row.iloc[0][c]
     return new_row
+
 
 def close_outbreaks(df):
     filled_in_state = pd.DataFrame()
@@ -222,43 +223,55 @@ def api_aggregate_outbreaks():
 
     return Response(processed_df.to_csv(index=False), mimetype='text/csv')
 
-@api.route('/close-outbreaks-nm-ar', methods=['POST'])
-def close_outbreaks_nm_ar():
-    payload = flask.request.data.decode('utf-8')
-    df = pd.read_csv(io.StringIO(payload))
+
+def cli_for_function(function, outfile, url):
+    """Wrap function in a basic command-line interface that fetches data from a google sheets url
+
+    Function is any function that takes in a pandas dataframe and returns a transformed dataframe"""
+    url = utils.csv_url_for_sheets_url(url)
+
+    # fetch the CSV data
+    with urllib.request.urlopen(url) as response:
+        data = response.read()
+    df = pd.read_csv(io.StringIO(data.decode('utf-8')))
+
+    # process it and print the result to STDOUT
+    processed_df = function(df)
+    if outfile:
+        processed_df.to_csv(outfile, index=False)
+    else:  # print to STDOUT
+        print(processed_df.to_csv(index=False))
+
+
+def cli_aggregate_outbreaks(outfile, url):
+    cli_for_function(do_aggregate_outbreaks, outfile, url)
+
+
+def do_close_outbreaks_nm_ar(df):
     flask.current_app.logger.info('DataFrame loaded: %d rows' % df.shape[0])
 
     state = set(df['State']).pop()
     standardize_data(df)
 
     t1 = time()
-    df = close_outbreaks(df)
+    processed_df = close_outbreaks(df)
     t2 = time()
 
     # this will go into the lambda logs
-    flask.current_app.logger.info('Closing outbreaks for %s took %s data took %.1f seconds, %d to %d rows' % (
+    flask.current_app.logger.info('Closing outbreaks for %s took %.1f seconds, %d to %d rows' % (
         state, (t2 - t1), df.shape[0], processed_df.shape[0]))
+
+    return processed_df
+
+
+@api.route('/close-outbreaks-nm-ar', methods=['POST'])
+def api_close_outbreaks_nm_ar():
+    payload = flask.request.data.decode('utf-8')
+    df = pd.read_csv(io.StringIO(payload))
+    processed_df = do_close_outbreaks_nm_ar(df)
 
     return Response(processed_df.to_csv(index=False), mimetype='text/csv')
 
-def cli_aggregate_outbreaks(outfile, url):
-    # extract the parameters from the google docs url and formulate a CSV export url
-    m = re.search('.*\/d\/(.*)\/edit.*#gid=(.*)', url)
-    if m:
-        key = m.group(1)
-        gid = m.group(2)
-        url = f"https://docs.google.com/spreadsheets/d/{key}/export?format=csv&gid={gid}"
-    else:
-        click.echo('Invalid Google Sheets URL')
-        raise click.Abort()
 
-    # fetch the CSV data
-    with urllib.request.urlopen(url) as response:
-        data = response.read()
-
-    # process it and print the result to STDOUT
-    processed_df = do_aggregate_outbreaks(pd.read_csv(io.StringIO(data.decode('utf-8'))))
-    if outfile:
-        processed_df.to_csv(outfile, index=False)
-    else:  # print to STDOUT
-        print(processed_df.to_csv(index=False))
+def cli_close_outbreaks_nm_ar(outfile, url):
+    cli_for_function(do_close_outbreaks_nm_ar, outfile, url)
