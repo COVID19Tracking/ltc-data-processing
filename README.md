@@ -27,3 +27,10 @@ To spin up a whole stack using docker:
 docker build -t cvapi .
 docker run -it -p 8000:8000 cvapi
 ```
+
+## Command-line interface
+
+Example:
+```shell
+flask flask aggregate_outbreaks "https://docs.google.com/spreadsheets/d/1r7DU4FN_spe71nMa2lsIXAXgGEBw8mwyryiDlby3Q6w/edit#gid=273523772"
+```
