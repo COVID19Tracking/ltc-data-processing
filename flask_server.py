@@ -1,7 +1,10 @@
 """This file is the main module which contains the app.
 """
+import click
+
 from app import create_app
 from decouple import config
+from app.api import ltc
 
 import config as configs
 
@@ -25,3 +28,10 @@ if env_config == 'production':
 def deploy():
     """Run deployment tasks."""
     return  # we have no deployment tasks
+
+
+@app.cli.command("aggregate_outbreaks")
+@click.option('-o', '--outfile')
+@click.argument("url")
+def cli_aggregate_outbreaks(outfile, url):
+    ltc.cli_aggregate_outbreaks(outfile, url)

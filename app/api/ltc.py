@@ -6,11 +6,13 @@ several outbreaks.
 """
 
 import io
-import json
+import re
+import urllib
 from time import time
 
+import click
 import flask
-from flask import Response
+from flask import Response, Flask
 import pandas as pd
 
 from app.api import api
@@ -131,10 +133,7 @@ def test():
 # chaining functions, we can make a map config for states that specify a chain of functions to apply
 # to Pandas DataFrame objects.
 
-@api.route('/aggregate-outbreaks', methods=['POST'])
-def aggregate_outbreaks():
-    payload = flask.request.data.decode('utf-8')
-    df = pd.read_csv(io.StringIO(payload))
+def do_aggregate_outbreaks(df):
     flask.current_app.logger.info('DataFrame loaded: %d rows' % df.shape[0])
 
     # TODO: if more than FL needs special treatment before aggregating outbreaks, factor this out
@@ -153,4 +152,36 @@ def aggregate_outbreaks():
     flask.current_app.logger.info('Collapsing %s data took %.1f seconds, %d to %d rows' % (
         state, (t2 - t1), df.shape[0], processed_df.shape[0]))
 
+    return processed_df
+
+
+@api.route('/aggregate-outbreaks', methods=['POST'])
+def api_aggregate_outbreaks():
+    payload = flask.request.data.decode('utf-8')
+    df = pd.read_csv(io.StringIO(payload))
+    processed_df = do_aggregate_outbreaks(df)
+
     return Response(processed_df.to_csv(index=False), mimetype='text/csv')
+
+
+def cli_aggregate_outbreaks(outfile, url):
+    # extract the parameters from the google docs url and formulate a CSV export url
+    m = re.search('.*\/d\/(.*)\/edit.*#gid=(.*)', url)
+    if m:
+        key = m.group(1)
+        gid = m.group(2)
+        url = f"https://docs.google.com/spreadsheets/d/{key}/export?format=csv&gid={gid}"
+    else:
+        click.echo('Invalid Google Sheets URL')
+        raise click.Abort()
+
+    # fetch the CSV data
+    with urllib.request.urlopen(url) as response:
+        data = response.read()
+
+    # process it and print the result to STDOUT
+    processed_df = do_aggregate_outbreaks(pd.read_csv(io.StringIO(data.decode('utf-8'))))
+    if outfile:
+        processed_df.to_csv(outfile, index=False)
+    else:  # print to STDOUT
+        print(processed_df.to_csv(index=False))
