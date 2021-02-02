@@ -275,3 +275,47 @@ def api_close_outbreaks_nm_ar():
 
 def cli_close_outbreaks_nm_ar(outfile, url):
     cli_for_function(do_close_outbreaks_nm_ar, outfile, url)
+
+
+def cli_quality_checks(outfile, url):
+    errors = []
+
+    def find_duplicates(df_group, col_map):
+        new_df_subset = df_group.loc[df_group['Outbrk_Status'] == 'OPEN'].copy()
+
+        # expecting only one row/open outbreak; if this isn't true, check whether the columns are the same
+        # and add the duplicate rows to the errors array
+        if new_df_subset.shape[0] > 1:
+            deduped = new_df_subset.drop_duplicates()
+            if deduped.shape[0] > 1:
+                deduped.loc[:, 'error'] = "Multiple open outbreak rows with different data"
+            else:
+                deduped.loc[:, 'error'] = "Duplicate open outbreak rows with same data"
+            errors.append(deduped)
+
+    def do_quality_checks(df):
+        standardize_data(df)
+        col_map = make_matching_column_name_map(df)
+
+        # check for duplicate open outbreaks
+        df.groupby(
+            ['Date', 'Facility', 'County', 'State_Facility_Type'], as_index=False).apply(
+            lambda x: find_duplicates(x, col_map))
+
+        # check for non-numeric data in numeric columns
+        cols = set(col_map.keys())
+        cols.update(col_map.values())
+        for colname in cols:
+            for i, item in enumerate(df[colname].fillna(0)):
+                try:
+                    int(item)
+                except ValueError:
+                    row = df.iloc[[i]].copy()
+                    row['error'] = f"Non-numeric value in numeric column {colname}"
+                    errors.append(row)
+
+        # get all the errors we found, turn them into a single dataframe
+        processed_errors = pd.concat(errors, ignore_index=True)
+        return processed_errors
+
+    cli_for_function(do_quality_checks, outfile, url)

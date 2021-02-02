@@ -42,3 +42,10 @@ def cli_aggregate_outbreaks(outfile, url):
 @click.argument("url")
 def cli_close_outbreaks(outfile, url):
     ltc.cli_close_outbreaks_nm_ar(outfile, url)
+
+
+@app.cli.command("quality_checks")
+@click.option('-o', '--outfile')
+@click.argument("url")
+def cli_close_outbreaks(outfile, url):
+    ltc.cli_quality_checks(outfile, url)
