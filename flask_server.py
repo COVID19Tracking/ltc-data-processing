@@ -49,3 +49,9 @@ def cli_close_outbreaks(outfile, url):
 @click.argument("url")
 def cli_close_outbreaks(outfile, url):
     ltc.cli_quality_checks(outfile, url)
+
+
+@app.cli.command("check_data_types")
+@click.argument("url")
+def cli_check_data_types(url):
+    ltc.cli_check_data_types(url)
