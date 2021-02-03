@@ -18,7 +18,7 @@ from app.api import api, utils
 
 # Uppercases county/city/facility/outbreak status entries, for easier comparison. Modifies in place
 def standardize_data(df):
-    df[['County', 'City', 'Facility']] = df[['County', 'City', 'Facility']].fillna(value='')
+    df[['County', 'City', 'Facility', 'Outbrk_Status']] = df[['County', 'City', 'Facility', 'Outbrk_Status']].fillna(value='')
     for colname in ['County', 'City', 'Facility', 'Outbrk_Status']:
         df[colname] = df[colname].str.upper()
 
@@ -345,21 +345,12 @@ def cli_quality_checks(outfile, url):
             ['Date', 'Facility', 'County', 'State_Facility_Type'], as_index=False).apply(
             lambda x: find_duplicates(x, col_map))
 
-        # check for non-numeric data in numeric columns
-        cols = set(col_map.keys())
-        cols.update(col_map.values())
-        for colname in cols:
-            for i, item in enumerate(df[colname].fillna(0)):
-                try:
-                    int(item)
-                except ValueError:
-                    row = df.iloc[[i]].copy()
-                    row['error'] = f"Non-numeric value in numeric column {colname}"
-                    errors.append(row)
-
         # get all the errors we found, turn them into a single dataframe
-        processed_errors = pd.concat(errors, ignore_index=True)
-        return processed_errors
+        if errors:
+            processed_errors = pd.concat(errors, ignore_index=True)
+            return processed_errors
+        else:  # no errors!
+            return pd.DataFrame()
 
     cli_for_function(do_quality_checks, outfile, url)
 
