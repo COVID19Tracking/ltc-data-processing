@@ -337,6 +337,9 @@ def cli_quality_checks(outfile, url):
             errors.append(deduped)
 
     def do_quality_checks(df):
+        # hack: use the latest data
+        df = df.loc[df.Date == 20210128]
+
         standardize_data(df)
         col_map = make_matching_column_name_map(df)
 
@@ -344,18 +347,6 @@ def cli_quality_checks(outfile, url):
         df.groupby(
             ['Date', 'Facility', 'County', 'State_Facility_Type'], as_index=False).apply(
             lambda x: find_duplicates(x, col_map))
-
-        # check for non-numeric data in numeric columns
-        cols = set(col_map.keys())
-        cols.update(col_map.values())
-        for colname in cols:
-            for i, item in enumerate(df[colname].fillna(0)):
-                try:
-                    int(item)
-                except ValueError:
-                    row = df.iloc[[i]].copy()
-                    row['error'] = f"Non-numeric value in numeric column {colname}"
-                    errors.append(row)
 
         # get all the errors we found, turn them into a single dataframe
         processed_errors = pd.concat(errors, ignore_index=True)
@@ -371,4 +362,7 @@ def cli_check_data_types(url):
     with urllib.request.urlopen(url) as response:
         data = response.read()
     df = pd.read_csv(io.StringIO(data.decode('utf-8')))
+
+    # hack: use the latest data
+    df = df.loc[df.Date == 20210128]
     check_data_types(df)
