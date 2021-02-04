@@ -12,6 +12,7 @@ from time import time
 import flask
 from flask import Response
 import pandas as pd
+import numpy as np
 
 from app.api import api, utils
 
@@ -128,7 +129,7 @@ def collapse_rows_new_header_names(df_group, col_map):
 
 # cleans up CTP Facility Types and federal/state regulated
 # this is optimized for FL - other states have different labels
-def state_to_ctp(record):
+def FL_state_to_ctp(record):
     state = record['State_Facility_Type']
     if(state == 'ALF' or state == 'Assisted Living'):
         record['CTP_Facility_Type'] = 'Assisted Living'
@@ -140,16 +141,16 @@ def state_to_ctp(record):
         record['CTP_Facility_Type'] = 'Other'
         record['Regulate'] = 'State'
     else:
-        record['CTP_Facility_Type'] = None
-        record['Regulate'] = None
+        record['CTP_Facility_Type'] = np.nan
+        record['Regulate'] = np.nan
     return record
 
 
 # clears any CMS IDs tied to facilities that are not nursing homes
 # this is optimized for FL - other states have different labels
 def clear_non_nh_cms_ids(record):
-    if ((record['State_Facility_Type'] != 'NH') and ~(record['CMS_ID'] == record['CMS_ID'])):
-        record['CMS_ID'] = None
+    if ((record['State_Facility_Type'] != 'NH') and (not pd.isnull(record['CMS_ID']))):
+        record['CMS_ID'] = np.nan
     return record
 
 
@@ -168,7 +169,7 @@ def preclean_FL(df):
 
 
 def postclean_FL(df):
-    df = df.apply(state_to_ctp, axis = 1)
+    df = df.apply(FL_state_to_ctp, axis = 1)
     df = df.apply(clear_non_nh_cms_ids, axis = 1)
     return df
 
@@ -272,13 +273,13 @@ def test():
 def do_aggregate_outbreaks(df):
     flask.current_app.logger.info('DataFrame loaded: %d rows' % df.shape[0])
 
+    standardize_data(df)
+
     # TODO: if more than FL needs special treatment before aggregating outbreaks, factor this out
     # into something nicer
-    state = {x for x in set(df['State']) if x==x}.pop()
+    state = set(df['State']).pop()
     if state == 'FL':
         preclean_FL(df)
-
-    standardize_data(df)
 
     t1 = time()
     processed_df = collapse_outbreak_rows(df)
