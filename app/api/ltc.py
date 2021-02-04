@@ -126,6 +126,33 @@ def collapse_rows_new_header_names(df_group, col_map):
     return new_df_subset
 
 
+# cleans up CTP Facility Types and federal/state regulated
+# this is optimized for FL - other states have different labels
+def state_to_ctp(record):
+    state = record['State_Facility_Type']
+    if(state == 'ALF' or state == 'Assisted Living'):
+        record['CTP_Facility_Type'] = 'Assisted Living'
+        record['Regulate'] = 'State'
+    elif(state == 'NH'):
+        record['CTP_Facility_Type'] = 'Nursing Home'
+        record['Regulate'] = 'Federal'
+    elif(state == 'ICF'):
+        record['CTP_Facility_Type'] = 'Other'
+        record['Regulate'] = 'State'
+    else:
+        record['CTP_Facility_Type'] = None
+        record['Regulate'] = None
+    return record
+
+
+# clears any CMS IDs tied to facilities that are not nursing homes
+# this is optimized for FL - other states have different labels
+def clear_non_nh_cms_ids(record):
+    if ((record['State_Facility_Type'] != 'NH') and ~(record['CMS_ID'] == record['CMS_ID'])):
+        record['CMS_ID'] = None
+    return record
+
+
 def preclean_FL(df):
     # these aren't real data rows: dropping 
     df.drop(df[df.County.isin(['TOTAL ICF', 'TOTAL ALF', 'TOTALS'])].index, inplace = True)
@@ -138,6 +165,12 @@ def preclean_FL(df):
             return county
         
     df['County'] = df['County'].apply(process_county)
+
+
+def postclean_FL(df):
+    df = df.apply(state_to_ctp, axis = 1)
+    df = df.apply(clear_non_nh_cms_ids, axis = 1)
+    return df
 
 
 def collapse_outbreak_rows(df):
@@ -241,7 +274,7 @@ def do_aggregate_outbreaks(df):
 
     # TODO: if more than FL needs special treatment before aggregating outbreaks, factor this out
     # into something nicer
-    state = set(df['State']).pop()
+    state = {x for x in set(df['State']) if x==x}.pop()
     if state == 'FL':
         preclean_FL(df)
 
@@ -250,6 +283,9 @@ def do_aggregate_outbreaks(df):
     t1 = time()
     processed_df = collapse_outbreak_rows(df)
     t2 = time()
+
+    if state == 'FL':
+        processed_df = postclean_FL(processed_df)
 
     # this will go into the lambda logs
     flask.current_app.logger.info('Collapsing %s data took %.1f seconds, %d to %d rows' % (
