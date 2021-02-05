@@ -98,6 +98,5 @@ def do_close_outbreaks_nm_ar(df):
 
     return processed_df
 
-
-def cli_close_outbreaks_nm_ar(outfile, url):
-    utils.cli_for_function(do_close_outbreaks_nm_ar, outfile, url)
+def cli_close_outbreaks_nm_ar(outputDir):
+    utils.run_function_on_states(do_close_outbreaks_nm_ar, ["NM", "AR"], [], outputDir)
