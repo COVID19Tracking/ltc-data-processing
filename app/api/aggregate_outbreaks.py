@@ -5,6 +5,8 @@ several outbreaks.
 """
 
 import flask
+import numpy as np
+import pandas as pd
 from time import time
 
 from app.api import utils
