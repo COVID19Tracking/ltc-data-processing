@@ -36,13 +36,10 @@ def deploy():
 def cli_aggregate_outbreaks(outfile, url):
     aggregate_outbreaks.cli_aggregate_outbreaks(outfile, url)
 
-
 @app.cli.command("close_outbreaks")
-@click.option('-o', '--outfile')
-@click.argument("url")
-def cli_close_outbreaks(outfile, url):
-    close_outbreaks.cli_close_outbreaks_nm_ar(outfile, url)
-
+@click.option('-o', '--outputdir')
+def cli_close_outbreaks(outputdir):
+    close_outbreaks.cli_close_outbreaks_nm_ar(outputdir)
 
 @app.cli.command("quality_checks")
 @click.option('-o', '--outfile')
