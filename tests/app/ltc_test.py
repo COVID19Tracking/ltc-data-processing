@@ -4,7 +4,7 @@ import os
 
 import pandas as pd
 
-from app.api.ltc import close_outbreaks
+from app.api.close_outbreaks import close_outbreaks
 
 def test_close_outbreaks():
     test_csv = "tests/app/fixtures/close_outbreak_nm_example.csv"
