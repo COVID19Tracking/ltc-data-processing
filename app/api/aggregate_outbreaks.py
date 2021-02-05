@@ -24,6 +24,7 @@ def preclean_FL(df):
     # some facilities have weird characters, replace as needed
     df['Facility'] = df['Facility'].str.replace('Ͳ','-')
     df['County'] = df['County'].str.replace('Ͳ','-')
+    df['Facility'] = df['Facility'].str.replace('‐', '-')  # insane ascii stuff
     def process_county(county):
         if county in ['UNKNOWN', 'UNKNOWN COUNTY']:
             return ''
