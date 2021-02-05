@@ -62,7 +62,7 @@ def get_all_state_finals():
     states_docs_urls = pd.read_csv("app/api/state_docs_urls.csv")
     return states_docs_urls['Finals'].tolist()
 
-def get_all_priortize_entries():
+def get_all_states_prioritize_entries():
     entries, finals = [], []
     for _, state_row in states_docs_urls.iterrows():
         if state_row['Entry']:
@@ -75,6 +75,9 @@ def get_all_priortize_entries():
 def run_function_on_states(function, entries, finals, outputDir):
     """
     Call the function on every google sheets url for the specified states.
+
+    :param [string] entries: a list of state abbreviations, the specified function will run on their Entry sheet
+    :param [string] finals: a list of state abbreviations, the specified function will run on their Final sheet
     """
     states_docs_urls = pd.read_csv("app/api/state_docs_urls.csv")
 
@@ -88,12 +91,12 @@ def run_function_on_states(function, entries, finals, outputDir):
     for _, state_row in states_docs_urls.iterrows():
         if state_row['Entry'] and state_row['State'] in entries:
             processed_df = process(state_row, 'Entry')
-            if not processed_df.empty:
+            if (processed_df is not None) and (not processed_df.empty):
                 processed_df.to_csv(path.join(outputDir, "%s_processed_entry.csv" % state_row['State']), index=False)
 
         elif state_row['Final'] and state_row['State'] in finals:
             processed_df = process(state_row, 'Final')
-            if not processed_df.empty:
+            if (processed_df is not None) and (not processed_df.empty):
                 processed_df.to_csv(path.join(outputDir, "%s_processed_final.csv" % state_row['State']), index=False)
 
         else:
