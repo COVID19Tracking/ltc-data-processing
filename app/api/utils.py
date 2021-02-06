@@ -60,12 +60,14 @@ def cli_for_function(function, outfile, url):
 
 def get_all_state_finals():
     states_docs_urls = pd.read_csv("app/api/state_docs_urls.csv")
-    return states_docs_urls['Finals'].tolist()
+    return states_docs_urls['Final'].tolist()
 
 def get_all_states_prioritize_entries():
     entries, finals = [], []
+    states_docs_urls = pd.read_csv("app/api/state_docs_urls.csv")
+    states_docs_urls = states_docs_urls.fillna(value='')
     for _, state_row in states_docs_urls.iterrows():
-        if state_row['Entry']:
+        if state_row['Entry'] != '':
             entries.append(state_row['Entry'])
         else:
             finals.append(state_row['Final'])
