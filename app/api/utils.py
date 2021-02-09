@@ -34,9 +34,9 @@ def make_matching_column_name_map(df):
 
 # Uppercases county/city/facility/outbreak status entries, for easier comparison. Modifies in place
 def standardize_data(df):
-    df[['County', 'City', 'Facility', 'Outbrk_Status']] = \
-        df[['County', 'City', 'Facility', 'Outbrk_Status']].fillna(value='')
-    for colname in ['County', 'City', 'Facility', 'Outbrk_Status']:
+    df[['County', 'City', 'Facility', 'Outbrk_Status', 'State_Facility_Type']] = \
+        df[['County', 'City', 'Facility', 'Outbrk_Status', 'State_Facility_Type']].fillna(value='')
+    for colname in ['County', 'City', 'Facility', 'Outbrk_Status', 'State_Facility_Type']:
         df[colname] = df[colname].str.upper()
 
     # drop any rows with empty dates
@@ -48,7 +48,10 @@ def cli_for_function(function, outfile, url):
     """Wrap function in a basic command-line interface that fetches data from a google sheets url
 
     Function is any function that takes in a pandas dataframe and returns a transformed dataframe"""
-    url = csv_url_for_sheets_url(url)
+
+    # URL can be a local CSV or a link
+    if not url.endswith('.csv'):
+        url = csv_url_for_sheets_url(url)
     df = pd.read_csv(url)
 
     # process it and print the result to STDOUT

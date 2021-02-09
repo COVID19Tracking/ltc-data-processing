@@ -76,7 +76,7 @@ def postclean_FL(df):
 
 # takes a dataframe containing the same facility name/date data and collapses the rows.
 # Finds conceptually paired columns based on the content of col_map.
-def collapse_rows_new_header_names(df_group, col_map):
+def collapse_rows_new_header_names(df_group, col_map, add_outbreak_and_cume=True):
     if df_group.shape[0] == 1:
         return df_group
 
@@ -105,8 +105,13 @@ def collapse_rows_new_header_names(df_group, col_map):
     for colname in col_map.keys():
         try:
             cumulative_val = df_group[colname].fillna(0).astype(int).sum()
-            current_open_val = df_group[col_map[colname]].fillna(0).astype(int).sum()
-            val = cumulative_val + current_open_val
+            current_open_val = int(new_df_subset[col_map[colname]].fillna(0))
+
+            if add_outbreak_and_cume:
+                val = cumulative_val + current_open_val
+            else:
+                val = cumulative_val
+
             if val > 0:
                 index = list(df_group.columns).index(colname)
                 new_df_subset.iat[0,index] = val
@@ -119,12 +124,13 @@ def collapse_rows_new_header_names(df_group, col_map):
     return new_df_subset
 
 
-def collapse_outbreak_rows(df):
+def collapse_outbreak_rows(df, add_outbreak_and_cume=True):
     col_map = utils.make_matching_column_name_map(df)
     # group by facility name and date, collapse each group into one row
     processed_df = df.groupby(
         ['Date', 'Facility', 'County', 'State_Facility_Type'], as_index=False).apply(
-        lambda x: collapse_rows_new_header_names(x, col_map))
+        lambda x: collapse_rows_new_header_names(
+            x, col_map, add_outbreak_and_cume=add_outbreak_and_cume))
 
     processed_df.sort_values(
         by=['Date', 'County', 'City', 'Facility'], inplace=True, ignore_index=True)
@@ -133,8 +139,8 @@ def collapse_outbreak_rows(df):
 
 def do_aggregate_outbreaks(df):
     flask.current_app.logger.info('DataFrame loaded: %d rows' % df.shape[0])
-
     utils.standardize_data(df)
+    flask.current_app.logger.info('After standardizing: %d rows' % df.shape[0])
 
     # TODO: if more than FL needs special treatment before aggregating outbreaks, factor this out
     # into something nicer
@@ -142,8 +148,12 @@ def do_aggregate_outbreaks(df):
     if state == 'FL':
         preclean_FL(df)
 
+    # for ND, we just propagate the cumulative values but don't add the current outbreak numbers
+    # into that
+    add_outbreak_and_cume = (state != 'ND')
+
     t1 = time()
-    processed_df = collapse_outbreak_rows(df)
+    processed_df = collapse_outbreak_rows(df, add_outbreak_and_cume=add_outbreak_and_cume)
     t2 = time()
 
     if state == 'FL':
