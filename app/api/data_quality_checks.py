@@ -88,6 +88,7 @@ def cli_quality_checks(outfile, url):
 
 
 def cli_check_data_types(url):
-    url = utils.csv_url_for_sheets_url(url)
+    if not url.endswith('.csv'):
+        url = utils.csv_url_for_sheets_url(url)
     df = pd.read_csv(url)
     check_data_types(df)
