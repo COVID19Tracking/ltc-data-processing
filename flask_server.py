@@ -4,7 +4,7 @@ import click
 
 from app import create_app
 from decouple import config
-from app.api import ltc, aggregate_outbreaks, close_outbreaks, data_quality_checks
+from app.api import ltc, aggregate_outbreaks, close_outbreaks, data_quality_checks, check_cumulative
 
 import config as configs
 
@@ -52,3 +52,9 @@ def cli_close_outbreaks(outfile, url):
 @click.argument("url")
 def cli_check_data_types(url):
     data_quality_checks.cli_check_data_types(url)
+
+
+@app.cli.command("check_cumulative_data")
+@click.option('-o', '--outfile')
+def check_cumulative_data(outfile):
+    check_cumulative.cli_check_cumulative_data(outfile)
