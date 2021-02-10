@@ -3,6 +3,7 @@ Basic data quality checks for facilities sheets.
 """
 
 import flask
+import numpy as np
 import pandas as pd
 
 from app.api import utils
@@ -11,34 +12,48 @@ from app.api import utils
 def check_data_types(df):
     flask.current_app.logger.info('Checking data types...')
 
-    # "Date" column should be dates that look like ints, e.g. 20210128
-    try:
-        df['Date'].astype(int)
-    except Exception as err:
-        if 'Cannot convert non-finite values (NA or inf) to integer' in str(err):
-            flask.current_app.logger.error('Some empty values in the Date column')
-        else:
-            flask.current_app.logger.error(
-                'Some problematic non-int data in Date, see error: %s' % err)
+    # "Date" column should be dates that look like ints, e.g. 20210128, and they should all be 8
+    # chars long when converted to a string
+    bad_date_values = set()
+    for date in df['Date']:
+        if pd.isnull(date):
+            bad_date_values.add(np.nan)  # alert to presence of nans, possibly empty rows?
+            continue
+        try:
+            date_int = int(date)
+            if len(str(date_int)) != 8:
+                raise ValueError
+        except Exception as err:
+            bad_date_values.add(date)
+    if bad_date_values:
+        flask.current_app.logger.error(
+            'Some problematic data in Date column: %s' % bad_date_values)
 
     # outbreak open/closed columns should be dates
     for date_col in ['Outbrk_Open', 'Outbrk_Closed']:
-        try:
-            df[date_col].astype('datetime64[ns]')
-        except Exception as err:
+        notnull = df[date_col].notnull()
+        # where to_datetime fails
+        not_datetime = pd.to_datetime(df[date_col], errors='coerce').isna()
+        not_datetime = not_datetime & notnull
+        bad_date_values = set(df[not_datetime][date_col])
+        if bad_date_values:
             flask.current_app.logger.error(
-                'Some non-date data in %s, see error: %s' % (date_col, str(err)))
+                'Some non-date data in %s column: %s' % (date_col, bad_date_values))
 
     num_numeric_cols = 24  # total number of metrics
     first_metric_col = 14  # position of 1st metric, "Cumulative Resident Positives"
     for i in range(first_metric_col, first_metric_col + num_numeric_cols):
         # fill missing values with 0s so that it doesn't complain because of nans
         df.iloc[:,i].fillna(0, inplace=True)
-        try:
-            df.iloc[:,i].astype(int)
-        except Exception as err:
+        non_int_values = set()
+        for val in df.iloc[:,i]:
+            try:
+                int(val)
+            except Exception as err2:
+                non_int_values.add(val)
+        if non_int_values:
             flask.current_app.logger.error(
-                'Some non-int data in %s, see error: %s' % (df.columns[i], str(err)))
+                'Some non-int data in %s column: %s' % (df.columns[i], non_int_values))
 
     # outbreak status should either be "open" or "closed"
     outbreak_statuses = set(df['Outbrk_Status'])
