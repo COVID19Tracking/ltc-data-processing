@@ -1,22 +1,6 @@
-import click
-import io
-import re
-
 from os import path
-
+from app.api.gsheets import csv_url_for_sheets_url, save_to_sheet
 import pandas as pd
-
-
-def csv_url_for_sheets_url(url):
-    """extract the parameters from a google docs url and formulate a CSV export url"""
-    m = re.search('.*\/d\/(.*)\/edit.*#gid=(.*)', url)
-    if m:
-        key = m.group(1)
-        gid = m.group(2)
-        return f"https://docs.google.com/spreadsheets/d/{key}/export?format=csv&gid={gid}"
-    else:
-        click.echo('Invalid Google Sheets URL')
-        raise click.Abort()
 
 
 # Using the standard facility sheet organization, creates a column name map for corresponding column
@@ -44,26 +28,33 @@ def standardize_data(df):
     df['Date'] = df['Date'].astype(int)
 
 
-def cli_for_function(function, outfile, url):
+def cli_for_function(function, outfile, url, write_to_sheet=False):
     """Wrap function in a basic command-line interface that fetches data from a google sheets url
 
     Function is any function that takes in a pandas dataframe and returns a transformed dataframe"""
 
     # URL can be a local CSV or a link
+    orig_url = url
     if not url.endswith('.csv'):
         url = csv_url_for_sheets_url(url)
     df = pd.read_csv(url)
 
-    # process it and print the result to STDOUT
+    # process it and send the result to the appropriate place
     processed_df = function(df)
+
+    if write_to_sheet:
+        save_to_sheet(orig_url, processed_df)
+
     if outfile:
         processed_df.to_csv(outfile, index=False)
     else:  # print to STDOUT
         print(processed_df.to_csv(index=False))
 
+
 def get_all_state_finals():
     states_docs_urls = pd.read_csv("app/api/state_docs_urls.csv")
     return states_docs_urls['Final'].tolist()
+
 
 def get_all_states_prioritize_entries():
     entries, finals = [], []
@@ -76,6 +67,7 @@ def get_all_states_prioritize_entries():
             finals.append(state_row['Final'])
 
     return (entries, finals)
+
 
 def run_function_on_states(function, entries, finals, outputDir):
     """

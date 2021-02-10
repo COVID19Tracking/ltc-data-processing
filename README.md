@@ -34,6 +34,7 @@ Example:
 ```shell
 flask aggregate_outbreaks "https://docs.google.com/spreadsheets/d/1r7DU4FN_spe71nMa2lsIXAXgGEBw8mwyryiDlby3Q6w/edit#gid=273523772" # outputs to STDOUT
 flask aggregate_outbreaks --outfile IL.csv "https://docs.google.com/spreadsheets/d/1r7DU4FN_spe71nMa2lsIXAXgGEBw8mwyryiDlby3Q6w/edit#gid=273523772" # writes to file
+flask aggregate_outbreaks --write-to-sheet "https://docs.google.com/spreadsheets/d/1r7DU4FN_spe71nMa2lsIXAXgGEBw8mwyryiDlby3Q6w/edit#gid=273523772" # publishes to google sheets
 flask close_outbreaks "https://docs.google.com/spreadsheets/d/1r7DU4FN_spe71nMa2lsIXAXgGEBw8mwyryiDlby3Q6w/edit#gid=273523772"
 flask quality_checks "https://docs.google.com/spreadsheets/d/1r7DU4FN_spe71nMa2lsIXAXgGEBw8mwyryiDlby3Q6w/edit#gid=273523772"
 ```
