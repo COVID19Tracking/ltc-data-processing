@@ -32,7 +32,7 @@ def deploy():
 
 @app.cli.command("aggregate_outbreaks")
 @click.option('-o', '--outfile')
-@click.option('--write-to-sheet', is_flag=True)
+@click.option('--write-to-sheet')
 @click.argument("url")
 def cli_aggregate_outbreaks(outfile, url, write_to_sheet):
     aggregate_outbreaks.cli_aggregate_outbreaks(outfile, url, write_to_sheet=write_to_sheet)

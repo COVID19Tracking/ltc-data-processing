@@ -43,7 +43,7 @@ def cli_for_function(function, outfile, url, write_to_sheet=False):
     processed_df = function(df)
 
     if write_to_sheet:
-        save_to_sheet(orig_url, processed_df)
+        save_to_sheet(write_to_sheet, processed_df)
 
     if outfile:
         processed_df.to_csv(outfile, index=False)
