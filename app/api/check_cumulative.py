@@ -13,7 +13,7 @@ def do_check_cumulative(outputFile):
     states = utils.get_all_state_finals()
 
     with open(outputFile, mode='w') as csv_file:
-        fieldnames = ['State', 'Facility', 'Date', 'cume_res_pos_value', 'prev_cume_res_pos_value']
+        fieldnames = ['State', 'Facility', 'Date', 'cume_res_pos_value', 'Prev Date', 'prev_cume_res_pos_value', 'CTP_Facility_Type']
         writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
         writer.writeheader()
 
@@ -23,18 +23,26 @@ def do_check_cumulative(outputFile):
             last_cumes = {}
             last_cume = 0
 
-            for date_index, date_row in collection_dates.iterrows():
-                collection_date = date_row['Date']
+            collection_dates = collection_dates['Date'].tolist()
+            collection_dates.sort()
+
+            for collection_date in collection_dates:
                 current_block = df.loc[df['Date'] == collection_date]
 
                 for _, f_row in current_block.iterrows():
                     current_cume = f_row['Cume_Res_Pos']
                     k = str(f_row['State']) + str(f_row['County']) + str(f_row['City']) + str(f_row['Facility'])
                     if k in last_cumes:
-                        if int(last_cumes[k]) > int(current_cume):
-                            writer.writerow({'State': f_row['State'], 'Facility': f_row['Facility'], 'Date': collection_date, 'cume_res_pos_value': int(current_cume), 'prev_cume_res_pos_value': int(last_cumes[k])})
+                        if int(last_cumes[k][0]) > int(current_cume) and last_cumes[k][1] <= collection_date:
+                            writer.writerow({'State': f_row['State'],
+                                'Facility': f_row['Facility'],
+                                'Date': collection_date,
+                                'cume_res_pos_value': int(current_cume),
+                                'Prev Date': last_cumes[k][1],
+                                'prev_cume_res_pos_value': int(last_cumes[k][0]),
+                                'CTP_Facility_Type': f_row['CTP_Facility_Type']})
 
-                    last_cumes[k] = current_cume
+                    last_cumes[k] = (current_cume, collection_date)
 
         t1 = time()
 
@@ -48,7 +56,6 @@ def do_check_cumulative(outputFile):
 
             utils.standardize_data(df)
             extra_data_standardization(df, state_name)
-
 
             check_cumulative(df)
 
@@ -87,21 +94,11 @@ def extra_data_standardization(df, state_name):
     df[['Cume_Res_Pos']] = df[['Cume_Res_Pos']].replace("≤5", 1)
     df[['Cume_Res_Pos']] = df[['Cume_Res_Pos']].replace("Redacted (1-4 cases)", 1) # PA
 
-    df.drop(df[df['Cume_Res_Pos'] == "#VALUE!"].index, inplace = True)
-    df.drop(df[df['Cume_Res_Pos'] == "Data Pending"].index, inplace = True)
-    df.drop(df[df['Cume_Res_Pos'] == "Not Reported"].index, inplace = True)
-    df.drop(df[df['Cume_Res_Pos'] == "Closed"].index, inplace = True)
-    df.drop(df[df['Cume_Res_Pos'] == "02/02/1900"].index, inplace = True) ##Maine MAINE VETERANS HOME 20200827
-    df.drop(df[df['Cume_Res_Pos'] == "--"].index, inplace = True) ## MI
-    df.drop(df[df['Cume_Res_Pos'] == "-"].index, inplace = True) ## MI
-    df.drop(df[df['Cume_Res_Pos'] == "."].index, inplace = True) ## MI
-    df.drop(df[df['Cume_Res_Pos'] == "*"].index, inplace = True) ## PA
-    df.drop(df[df['Cume_Res_Pos'] == "No Data"].index, inplace = True) ## PA
-    df.drop(df[df['Cume_Res_Pos'] == "No data"].index, inplace = True) ## PA
-    df.drop(df[df['Cume_Res_Pos'] == "[;"].index, inplace = True) ## PA
-    df.drop(df[df['Cume_Res_Pos'] == "No data "].index, inplace = True) ## PA
-    df.drop(df[df['Cume_Res_Pos'] == "ND"].index, inplace = True) ## PA
-    df.drop(df[df['Cume_Res_Pos'] == "COVID-19 Positive Residents"].index, inplace = True) ## PA
+    strings_to_drop = {'#VALUE!', 'Data Pending', 'Not Reported', 'Closed',
+            '02/02/1900', '--', '-', '.', '*', 'No Data', 'No data', 'No data ',
+            '[;', 'ND', 'COVID-19 Positive Residents'}
+
+    df.drop(df[df['Cume_Res_Pos'].isin(strings_to_drop)].index, inplace = True)
 
     df[['Cume_Res_Pos']] = df[['Cume_Res_Pos']].astype(int)
 
