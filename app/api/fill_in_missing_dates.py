@@ -10,7 +10,6 @@ from time import time
 from app.api import utils
 
 ALL_DATES = [
-    20200416, 20200423, 20200430, 20200507, 20200514,
     20200521, 20200528, 20200604, 20200611, 20200618,
     20200625, 20200702, 20200709, 20200716, 20200723,
     20200730, 20200806, 20200813, 20200820, 20200827,
@@ -21,22 +20,44 @@ ALL_DATES = [
     20210121, 20210128, 20210204, 20210211
 ]
 
-def fill_in_missing_dates(df, state_name):
-    flask.current_app.logger.info("filling in missing dates for %s ..." % state_name)
+def fill_in_missing_dates(df, state_name, onlyThisWeek):
+    flask.current_app.logger.info("filling in LATEST missing dates for %s ..." % state_name)
+    if onlyThisWeek:
+        reversed_all_dates = ALL_DATES[::-1]
+
+        latest_day = reversed_all_dates[0]
+
+        if df['Date'].max() == latest_day:
+            return df
+
+        for date in reversed_all_dates:
+            if date in df['Date'].tolist():
+                flask.current_app.logger.info("filling in %d for %s with data from %d ..." % (latest_day, state_name, date) )
+                new_block = df.loc[df['Date'] == date]
+                new_block = new_block.assign(Date=latest_day)
+
+                df = df.append(new_block)
+                return df
 
     starting_date = df['Date'].min()
 
     converted_df = pd.DataFrame()
 
-    skip = {"CO", "FL", "ID", "KY", "MI", "ND", "OR"}
+    skip = {"ND", "OR"}
     if state_name in skip:
         return converted_df
+
+    if starting_date < ALL_DATES[0]:
+        starting_date = ALL_DATES[0]
 
     i = ALL_DATES.index(starting_date)
     prev_date = starting_date
 
     df = df.convert_dtypes()
     # df = df.astype({'CMS_ID': 'Int64'})
+
+    before = df.loc[df['Date'] < starting_date]
+    converted_df = converted_df.append(before)
 
     while i < len(ALL_DATES):
         date = ALL_DATES[i]
@@ -46,6 +67,8 @@ def fill_in_missing_dates(df, state_name):
             prev_date = date
 
         else:
+            flask.current_app.logger.info("filling in %d for %s with data from %d ..." % (date, state_name, prev_date) )
+
             new_block = df.loc[df['Date'] == prev_date]
             new_block = new_block.assign(Date=date)
 
@@ -55,22 +78,22 @@ def fill_in_missing_dates(df, state_name):
 
     return converted_df
 
-def do_fill_in_missing_dates(df):
+def do_fill_in_missing_dates(df, onlyThisWeek):
     flask.current_app.logger.info('DataFrame loaded: %d rows' % df.shape[0])
 
     state = df['State'].iloc[0]
     utils.standardize_data(df)
 
     t1 = time()
-    processed_df = fill_in_missing_dates(df, state)
+    processed_df = fill_in_missing_dates(df, state, onlyThisWeek)
     t2 = time()
 
     # this will go into the lambda logs
-    flask.current_app.logger.info('Closing outbreaks for %s took %.1f seconds, %d to %d rows' % (
+    flask.current_app.logger.info('Filling in dates for %s took %.1f seconds, %d to %d rows' % (
         state, (t2 - t1), df.shape[0], processed_df.shape[0]))
 
     return processed_df
 
-def cli_fill_in_missing_dates(outputDir):
-    entries, finals = utils.get_all_states_prioritize_entries_abrevs()
-    utils.run_function_on_states(do_fill_in_missing_dates, entries, finals, outputDir)
+def cli_fill_in_missing_dates(outputDir, onlyThisWeek):
+    finals = utils.get_all_state_finals_abbrevs()
+    utils.run_function_on_states(do_fill_in_missing_dates, [], finals, outputDir, (onlyThisWeek, ) )

@@ -70,6 +70,9 @@ def get_all_state_finals():
     states_docs_urls = pd.read_csv("app/api/state_docs_urls.csv")
     return states_docs_urls['Final'].tolist()
 
+def get_all_state_finals_abbrevs():
+    states_docs_urls = pd.read_csv("app/api/state_docs_urls.csv")
+    return states_docs_urls['State'].tolist()
 
 def get_all_states_prioritize_entries():
     entries, finals = [], []
@@ -95,7 +98,7 @@ def get_all_states_prioritize_entries_abrevs():
 
     return (entries, finals)
 
-def run_function_on_states(function, entries, finals, outputDir):
+def run_function_on_states(function, entries, finals, outputDir, args=()):
     """
     Call the function on every google sheets url for the specified states.
 
@@ -108,7 +111,7 @@ def run_function_on_states(function, entries, finals, outputDir):
         print("Running function %s on %s %s sheet..." % (function.__name__, state_row['State'], column))
         url = csv_url_for_sheets_url(state_row[column])
         df = pd.read_csv(url)
-        processed_df = function(df)
+        processed_df = function(df, *args)
         return processed_df
 
     for _, state_row in states_docs_urls.iterrows():
