@@ -5,7 +5,7 @@ import click
 from app import create_app
 from decouple import config
 from app.api import ltc, aggregate_outbreaks, close_outbreaks, data_quality_checks, \
-    check_cumulative, unreset_cumulative, process as process_module
+    check_cumulative, unreset_cumulative, fill_in_missing_dates, process as process_module
 
 import config as configs
 
@@ -59,7 +59,6 @@ def cli_check_data_types_all():
 @click.option('-w', '--onlythisweek', is_flag=True)
 def check_cumulative_data(outfile, onlythisweek):
     check_cumulative.cli_check_cumulative_data(outfile, onlythisweek)
-
 
 @app.cli.command("process")
 @click.option('--states', default='', help='State abbreviations to run for, e.g. "ME,DE"')
