@@ -59,5 +59,6 @@ def cli_check_data_types(url):
 
 @app.cli.command("check_cumulative_data")
 @click.option('-o', '--outfile')
-def check_cumulative_data(outfile):
-    check_cumulative.cli_check_cumulative_data(outfile)
+@click.option('-w', '--onlythisweek', is_flag=True)
+def check_cumulative_data(outfile, onlythisweek):
+    check_cumulative.cli_check_cumulative_data(outfile, onlythisweek)
