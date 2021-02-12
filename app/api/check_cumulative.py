@@ -9,7 +9,7 @@ import pandas as pd
 
 from app.api import utils
 
-def do_check_cumulative(outputFile):
+def do_check_cumulative(outputFile, onlyThisWeek):
     states = utils.get_all_state_finals()
 
     with open(outputFile, mode='w') as csv_file:
@@ -26,6 +26,11 @@ def do_check_cumulative(outputFile):
             collection_dates = collection_dates['Date'].tolist()
             collection_dates.sort()
 
+            if len(collection_dates) == 0:
+                return
+
+            this_week = collection_dates[-1]
+
             for collection_date in collection_dates:
                 current_block = df.loc[df['Date'] == collection_date]
 
@@ -34,13 +39,19 @@ def do_check_cumulative(outputFile):
                     k = str(f_row['State']) + str(f_row['County']) + str(f_row['City']) + str(f_row['Facility'])
                     if k in last_cumes:
                         if int(last_cumes[k][0]) > int(current_cume) and last_cumes[k][1] <= collection_date:
-                            writer.writerow({'State': f_row['State'],
+                            row_to_write = {'State': f_row['State'],
                                 'Facility': f_row['Facility'],
                                 'Date': collection_date,
                                 'cume_res_pos_value': int(current_cume),
                                 'Prev Date': last_cumes[k][1],
                                 'prev_cume_res_pos_value': int(last_cumes[k][0]),
-                                'CTP_Facility_Type': f_row['CTP_Facility_Type']})
+                                'CTP_Facility_Type': f_row['CTP_Facility_Type']}
+
+                            if not onlyThisWeek:
+                                writer.writerow(row_to_write)
+
+                            elif onlyThisWeek and collection_date == this_week:
+                                writer.writerow(row_to_write)
 
                     last_cumes[k] = (current_cume, collection_date)
 
@@ -102,5 +113,5 @@ def extra_data_standardization(df, state_name):
 
     df[['Cume_Res_Pos']] = df[['Cume_Res_Pos']].astype(int)
 
-def cli_check_cumulative_data(outputFile):
-    do_check_cumulative(outputFile)
+def cli_check_cumulative_data(outputFile, onlyThisWeek):
+    do_check_cumulative(outputFile, onlyThisWeek)
