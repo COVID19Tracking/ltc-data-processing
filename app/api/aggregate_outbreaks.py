@@ -166,5 +166,5 @@ def do_aggregate_outbreaks(df):
     return processed_df
 
 
-def cli_aggregate_outbreaks(outfile, url):
-    utils.cli_for_function(do_aggregate_outbreaks, outfile, url)
+def cli_aggregate_outbreaks(outfile, url, write_to_sheet=False):
+    utils.cli_for_function(do_aggregate_outbreaks, outfile, url, write_to_sheet=write_to_sheet)

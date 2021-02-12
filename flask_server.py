@@ -32,14 +32,17 @@ def deploy():
 
 @app.cli.command("aggregate_outbreaks")
 @click.option('-o', '--outfile')
+@click.option('--write-to-sheet')
 @click.argument("url")
-def cli_aggregate_outbreaks(outfile, url):
-    aggregate_outbreaks.cli_aggregate_outbreaks(outfile, url)
+def cli_aggregate_outbreaks(outfile, url, write_to_sheet):
+    aggregate_outbreaks.cli_aggregate_outbreaks(outfile, url, write_to_sheet=write_to_sheet)
+
 
 @app.cli.command("close_outbreaks")
 @click.option('-o', '--outputdir')
 def cli_close_outbreaks(outputdir):
     close_outbreaks.cli_close_outbreaks_nm_ar(outputdir)
+
 
 @app.cli.command("quality_checks")
 @click.option('-o', '--outfile')
