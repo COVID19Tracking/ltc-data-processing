@@ -53,10 +53,12 @@ def close_outbreaks(df):
     collection_dates = df[['Date']].drop_duplicates()
     facilities = df[['State', 'County', 'City', 'Facility']].drop_duplicates()
 
+    collection_dates = collection_dates['Date'].tolist()
+    collection_dates.sort()
+
     last_collected = { }
 
-    for date_index, date_row in collection_dates.iterrows():
-        collection_date = date_row['Date']
+    for collection_date in collection_dates:
         current_block = df.loc[df['Date'] == collection_date]
         for _, block_row in current_block.iterrows():
             k = str(block_row['State']) + str(block_row['County']) + \
