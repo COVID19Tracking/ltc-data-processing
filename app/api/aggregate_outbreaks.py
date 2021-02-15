@@ -168,3 +168,15 @@ def do_aggregate_outbreaks(df):
 
 def cli_aggregate_outbreaks(outfile, url, write_to_sheet=False):
     utils.cli_for_function(do_aggregate_outbreaks, outfile, url, write_to_sheet=write_to_sheet)
+
+
+def cli_aggregate_outbreaks_all():
+    urls_df = pd.read_csv('app/api/state_docs_urls.csv')
+
+    states = ['CO', 'DE', 'FL', 'IL', 'ME', 'MN', 'ND', 'NJ', 'OR', 'WY']
+    for state in states:
+        flask.current_app.logger.info('Aggregating outbreaks for %s...' % state)
+        row = urls_df.loc[urls_df.State == state].iloc[0]
+        outfile = 'outputs/%s_aggregate_outbreaks.csv' % state
+        cli_aggregate_outbreaks(outfile=outfile, url=row.Entry, write_to_sheet=row.Final)
+        flask.current_app.logger.info('Done.')
