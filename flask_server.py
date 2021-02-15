@@ -4,7 +4,7 @@ import click
 
 from app import create_app
 from decouple import config
-from app.api import ltc, aggregate_outbreaks, close_outbreaks, data_quality_checks, check_cumulative
+from app.api import ltc, aggregate_outbreaks, close_outbreaks, data_quality_checks, check_cumulative, unreset_cumulative
 
 import config as configs
 
@@ -38,23 +38,46 @@ def cli_aggregate_outbreaks(outfile, url, write_to_sheet):
     aggregate_outbreaks.cli_aggregate_outbreaks(outfile, url, write_to_sheet=write_to_sheet)
 
 
+@app.cli.command("aggregate_outbreaks_all")
+def cli_aggregate_outbreaks_all():
+    aggregate_outbreaks.cli_aggregate_outbreaks_all()
+
+
 @app.cli.command("close_outbreaks")
 @click.option('-o', '--outputdir')
 def cli_close_outbreaks(outputdir):
     close_outbreaks.cli_close_outbreaks_nm_ar(outputdir)
 
 
+@app.cli.command("update_2021_ky")
+@click.option('-o', '--outfile')
+@click.option('--write-to-sheet')
+@click.argument("url")
+def cli_update_2021_ky(outfile, url, write_to_sheet):
+    unreset_cumulative.cli_update_ky_2021_data(outfile, url, write_to_sheet=write_to_sheet)
+
+
 @app.cli.command("quality_checks")
 @click.option('-o', '--outfile')
 @click.argument("url")
-def cli_close_outbreaks(outfile, url):
+def cli_quality_checks(outfile, url):
     data_quality_checks.cli_quality_checks(outfile, url)
+
+
+@app.cli.command("quality_checks_all")
+def cli_quality_checks_all():
+    data_quality_checks.cli_quality_checks_all()
 
 
 @app.cli.command("check_data_types")
 @click.argument("url")
 def cli_check_data_types(url):
     data_quality_checks.cli_check_data_types(url)
+
+
+@app.cli.command("check_data_types_all")
+def cli_check_data_types_all():
+    data_quality_checks.cli_check_data_types_all()
 
 
 @app.cli.command("check_cumulative_data")

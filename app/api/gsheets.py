@@ -53,10 +53,7 @@ def save_to_sheet(target_sheet_url, df):
         raise WorksheetNotFound(target_gid)
 
     ws_name = ws.title
-
-    # make a backup of the target worksheet and then clear its contents
-    ws.duplicate(2, new_sheet_name=f"{ws_name}_backup_{datetime.datetime.today().strftime('%Y%m%d%H%M%S')}")
-    ws.clear()
+    ws.clear()  # clear target worksheet contents
 
     # turn the data into a 2D array with column headers
     data = [df.columns.to_list()]

@@ -10,7 +10,12 @@ from app.api import utils
 
 
 def check_data_types(df):
-    flask.current_app.logger.info('Checking data types...')
+    states = set(df['State'])
+    if len(states) > 2:
+        flask.current_app.logger.error(
+            'Some problematic states in State column: %s' % str(states))
+    state = [x for x in states if not pd.isnull(x)][0]
+    flask.current_app.logger.info('Checking data types for %s...' % state)
 
     # "Date" column should be dates that look like ints, e.g. 20210128, and they should all be 8
     # chars long when converted to a string
@@ -107,3 +112,21 @@ def cli_check_data_types(url):
         url = utils.csv_url_for_sheets_url(url)
     df = pd.read_csv(url)
     check_data_types(df)
+
+
+def cli_check_data_types_all():
+    urls_df = pd.read_csv('app/api/state_docs_urls.csv')
+    for i, row in urls_df.iterrows():
+        url = row.Entry if not (pd.isnull(row.Entry) or row.Entry == '') else row.Final
+        if not url.endswith('.csv'):
+            url = utils.csv_url_for_sheets_url(url)
+        df = pd.read_csv(url)
+        check_data_types(df)
+
+
+def cli_quality_checks_all():
+    urls_df = pd.read_csv('app/api/state_docs_urls.csv')
+    for i, row in urls_df.iterrows():
+        url = row.Entry if not (pd.isnull(row.Entry) or row.Entry == '') else row.Final
+        outfile = 'outputs/%s_duplicate_outbreak.csv' % row.State
+        cli_quality_checks(outfile, url)  # this function expects the unprocessed URL

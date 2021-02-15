@@ -21,7 +21,7 @@ def standardize_data(df):
     df[['County', 'City', 'Facility', 'Outbrk_Status', 'State_Facility_Type']] = \
         df[['County', 'City', 'Facility', 'Outbrk_Status', 'State_Facility_Type']].fillna(value='')
     for colname in ['County', 'City', 'Facility', 'Outbrk_Status', 'State_Facility_Type']:
-        df[colname] = df[colname].str.upper()
+        df[colname] = df[colname].str.upper().str.strip()
 
     # drop any rows with empty dates
     df.drop(df[pd.isnull(df['Date'])].index, inplace = True)
@@ -45,7 +45,7 @@ def cli_for_function(function, outfile, url, write_to_sheet=False):
     if write_to_sheet:
         save_to_sheet(write_to_sheet, processed_df)
 
-    if outfile:
+    if outfile and not processed_df.empty:
         processed_df.to_csv(outfile, index=False)
     else:  # print to STDOUT
         print(processed_df.to_csv(index=False))
