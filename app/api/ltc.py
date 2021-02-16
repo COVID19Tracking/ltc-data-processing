@@ -41,12 +41,3 @@ def api_aggregate_outbreaks():
     processed_df = aggregate_outbreaks.do_aggregate_outbreaks(df)
 
     return Response(processed_df.to_csv(index=False), mimetype='text/csv')
-
-
-@api.route('/close-outbreaks-nm-ar', methods=['POST'])
-def api_close_outbreaks_nm_ar():
-    payload = flask.request.data.decode('utf-8')
-    df = pd.read_csv(io.StringIO(payload))
-    processed_df = close_outbreaks.do_close_outbreaks_nm_ar(df)
-
-    return Response(processed_df.to_csv(index=False), mimetype='text/csv')
