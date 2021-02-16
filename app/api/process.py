@@ -27,9 +27,12 @@ _FUNCTION_LISTS = {
     'ND': [
         utils.standardize_data,
         lambda df: aggregate_outbreaks.collapse_outbreak_rows(df, add_outbreak_and_cume=False),
-        ],  ## CHECK THIS
+        ],
     'NJ': [utils.standardize_data, aggregate_outbreaks.collapse_outbreak_rows],
     'OR': [utils.standardize_data, aggregate_outbreaks.collapse_outbreak_rows],
+    'VA': [utils.standardize_data,
+        lambda df: aggregate_outbreaks.collapse_outbreak_rows(df, add_multiple_outbreaks=True),
+        ],
     'WY': [utils.standardize_data, aggregate_outbreaks.collapse_outbreak_rows],
 }
 

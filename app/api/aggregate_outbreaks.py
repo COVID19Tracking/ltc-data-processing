@@ -77,7 +77,8 @@ def postclean_FL(df):
 
 # takes a dataframe containing the same facility name/date data and collapses the rows.
 # Finds conceptually paired columns based on the content of col_map.
-def collapse_rows_new_header_names(df_group, col_map, add_outbreak_and_cume=True):
+def collapse_rows_new_header_names(df_group, col_map,
+        add_outbreak_and_cume=True, add_multiple_outbreaks=False):
     if df_group.shape[0] == 1:
         return df_group
 
@@ -94,7 +95,13 @@ def collapse_rows_new_header_names(df_group, col_map, add_outbreak_and_cume=True
         if deduped.shape[0] > 1:
             flask.current_app.logger.info(
                 'Multiple open outbreak rows with different data: %s' % row_descriptor)
-            return df_group
+            if not add_multiple_outbreaks:
+                return df_group
+            else:
+                # convert the new DF subset into a single row, adding outbreak columns
+                pd.set_option('display.max_columns', 500)
+                import pdb; pdb.set_trace()
+                return df_group
         else:
             # still duplicate rows, but these are the same data so we can trust it
             flask.current_app.logger.info('Duplicate open outbreak rows: %s' % row_descriptor)
@@ -125,13 +132,14 @@ def collapse_rows_new_header_names(df_group, col_map, add_outbreak_and_cume=True
     return new_df_subset
 
 
-def collapse_outbreak_rows(df, add_outbreak_and_cume=True):
+def collapse_outbreak_rows(df, add_outbreak_and_cume=True, add_multiple_outbreaks=False):
     col_map = utils.make_matching_column_name_map(df)
     # group by facility name and date, collapse each group into one row
     processed_df = df.groupby(
         ['Date', 'Facility', 'County', 'State_Facility_Type'], as_index=False).apply(
         lambda x: collapse_rows_new_header_names(
-            x, col_map, add_outbreak_and_cume=add_outbreak_and_cume))
+            x, col_map, add_outbreak_and_cume=add_outbreak_and_cume,
+            add_multiple_outbreaks=add_multiple_outbreaks))
 
     processed_df.sort_values(
         by=['Date', 'County', 'City', 'Facility'], inplace=True, ignore_index=True)
