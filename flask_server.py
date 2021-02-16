@@ -4,7 +4,8 @@ import click
 
 from app import create_app
 from decouple import config
-from app.api import ltc, aggregate_outbreaks, close_outbreaks, data_quality_checks, check_cumulative, unreset_cumulative
+from app.api import ltc, aggregate_outbreaks, close_outbreaks, data_quality_checks, \
+    check_cumulative, unreset_cumulative, process as process_module
 
 import config as configs
 
@@ -28,19 +29,6 @@ if env_config == 'production':
 def deploy():
     """Run deployment tasks."""
     return  # we have no deployment tasks
-
-
-@app.cli.command("aggregate_outbreaks")
-@click.option('-o', '--outfile')
-@click.option('--write-to-sheet')
-@click.argument("url")
-def cli_aggregate_outbreaks(outfile, url, write_to_sheet):
-    aggregate_outbreaks.cli_aggregate_outbreaks(outfile, url, write_to_sheet=write_to_sheet)
-
-
-@app.cli.command("aggregate_outbreaks_all")
-def cli_aggregate_outbreaks_all():
-    aggregate_outbreaks.cli_aggregate_outbreaks_all()
 
 
 @app.cli.command("close_outbreaks")
@@ -85,3 +73,14 @@ def cli_check_data_types_all():
 @click.option('-w', '--onlythisweek', is_flag=True)
 def check_cumulative_data(outfile, onlythisweek):
     check_cumulative.cli_check_cumulative_data(outfile, onlythisweek)
+
+
+@app.cli.command("process")
+@click.option('--state', default='', help='State abbreviation to run for, e.g. "CA"')
+@click.option('--write-to-final', is_flag=True)
+@click.option('--other-sheet-url', default='', help='Other sheet URL to write processed file to; '
+    'use if writing to something other than final sheet')
+@click.option('--local-path', default='', help='Local CSV path to write processed file to')
+def process(state, write_to_final, other_sheet_url, local_path):
+    process_module.cli_process_state(state, write_to_final=write_to_final,
+        other_sheet_url=other_sheet_url, local_path=local_path)
