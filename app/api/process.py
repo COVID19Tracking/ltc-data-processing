@@ -12,6 +12,7 @@ from app.api import utils, ltc, aggregate_outbreaks, close_outbreaks, data_quali
 
 
 _FUNCTION_LISTS = {
+    'CA': [utils.standardize_data],
     'CO': [utils.standardize_data, aggregate_outbreaks.collapse_outbreak_rows],
     'DE': [utils.standardize_data, aggregate_outbreaks.collapse_outbreak_rows],
     'FL': [
