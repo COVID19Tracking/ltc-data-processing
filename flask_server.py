@@ -77,10 +77,18 @@ def check_cumulative_data(outfile, onlythisweek):
 
 @app.cli.command("process")
 @click.option('--state', default='', help='State abbreviation to run for, e.g. "CA"')
-@click.option('--write-to-final', is_flag=True)
-@click.option('--other-sheet-url', default='', help='Other sheet URL to write processed file to; '
-    'use if writing to something other than final sheet')
-@click.option('--local-path', default='', help='Local CSV path to write processed file to')
-def process(state, write_to_final, other_sheet_url, local_path):
-    process_module.cli_process_state(state, write_to_final=write_to_final,
-        other_sheet_url=other_sheet_url, local_path=local_path)
+@click.option('--overwrite-final-gsheet', is_flag=True)
+@click.option('--out-sheet-url', default='',
+    help='Write the processed data to the specified Google Sheet url')
+@click.option('--outfile', default='',
+    help='Write the processed data to CSV file at this local path')
+def process(state, overwrite_final_gsheet, out_sheet_url, outfile):
+    """Process all data from STATE as defined in the Sheet of Sheets.
+
+    The processing functions applied to each state are defined in app/api/process.py. 
+    The resulting output can be saved to the final sheet defined in the Sheet of Sheets
+    (--write-to-gsheets), to a specified sheet url (--out-sheet-url), or to a local CSV file 
+    (--outfile).
+    """
+    process_module.cli_process_state(state, overwrite_final_gsheet=overwrite_final_gsheet,
+        out_sheet_url=out_sheet_url, outfile=outfile)
