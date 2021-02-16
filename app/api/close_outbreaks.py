@@ -82,23 +82,3 @@ def close_outbreaks(df):
     filled_in_state = filled_in_state.convert_dtypes()
     filled_in_state.reset_index(drop=True, inplace=True)
     return filled_in_state
-
-
-def do_close_outbreaks_nm_ar(df):
-    flask.current_app.logger.info('DataFrame loaded: %d rows' % df.shape[0])
-
-    state = set(df['State']).pop()
-    utils.standardize_data(df)
-
-    t1 = time()
-    processed_df = close_outbreaks(df)
-    t2 = time()
-
-    # this will go into the lambda logs
-    flask.current_app.logger.info('Closing outbreaks for %s took %.1f seconds, %d to %d rows' % (
-        state, (t2 - t1), df.shape[0], processed_df.shape[0]))
-
-    return processed_df
-
-def cli_close_outbreaks_nm_ar(outputDir):
-    utils.run_function_on_states(do_close_outbreaks_nm_ar, ["NM", "AR"], [], outputDir)
