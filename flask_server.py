@@ -31,14 +31,6 @@ def deploy():
     return  # we have no deployment tasks
 
 
-@app.cli.command("update_2021_ky")
-@click.option('-o', '--outfile')
-@click.option('--write-to-sheet')
-@click.argument("url")
-def cli_update_2021_ky(outfile, url, write_to_sheet):
-    unreset_cumulative.cli_update_ky_2021_data(outfile, url, write_to_sheet=write_to_sheet)
-
-
 @app.cli.command("quality_checks")
 @click.option('-o', '--outfile')
 @click.argument("url")

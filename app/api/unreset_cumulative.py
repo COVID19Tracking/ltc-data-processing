@@ -23,6 +23,8 @@ def preclean_KY(df):
     for key, val in replace_strings.items():
         df['County'] = df['County'].str.replace(key, val)
 
+    return df
+
 
 # are there any facilities that have dates in 2021 that aren't consecutive from the max? If this
 # returns False, we just propagate the group as is because there's something weird about the dates
@@ -87,34 +89,20 @@ def update_ky_2021_data(df_group, col_map, dates_2021, early_disappeared_facilit
     return df_group
 
 
-def do_update_ky_2021_data(df):
-    flask.current_app.logger.info('DataFrame loaded: %d rows' % df.shape[0])
-    utils.standardize_data(df)
-    preclean_KY(df)
-    flask.current_app.logger.info('After standardizing and cleanup: %d rows' % df.shape[0])
-
+def really_update_ky_2021_data(df):
     col_map = utils.make_matching_column_name_map(df)
     dates_2021 = sorted([x for x in set(df.Date) if x > 20210101])
 
     # group facilities and update each group as needed
-    t1 = time()
     early_disappeared_facilities = set()
     processed_df = df.groupby(['County', 'City', 'Facility'], as_index=False).apply(
         lambda x: update_ky_2021_data(x, col_map, dates_2021, early_disappeared_facilities))
     processed_df.sort_values(
         by=['Date', 'County', 'City', 'Facility'], inplace=True, ignore_index=True)
-    t2 = time()
 
-
-    flask.current_app.logger.info('Updating KY data took %.1f seconds, %d to %d rows' % (
-        (t2 - t1), df.shape[0], processed_df.shape[0]))
-
+    # log which facilities disappeared before 20201231
     if len(early_disappeared_facilities) > 0:
         flask.current_app.logger.info('Facilities dropped before 20201231:')
         flask.current_app.logger.info(early_disappeared_facilities)
 
     return processed_df
-
-
-def cli_update_ky_2021_data(outfile, url, write_to_sheet=False):
-    utils.cli_for_function(do_update_ky_2021_data, outfile, url, write_to_sheet=write_to_sheet)
