@@ -12,7 +12,6 @@ from app.api import utils, ltc, aggregate_outbreaks, close_outbreaks, data_quali
 
 
 _FUNCTION_LISTS = {
-    'AR': [utils.standardize_data, close_outbreaks.close_outbreaks],
     'CA': [utils.standardize_data],
     'CO': [utils.standardize_data, aggregate_outbreaks.collapse_outbreak_rows],
     'DE': [utils.standardize_data, aggregate_outbreaks.collapse_outbreak_rows],
@@ -30,7 +29,6 @@ _FUNCTION_LISTS = {
         lambda df: aggregate_outbreaks.collapse_outbreak_rows(df, add_outbreak_and_cume=False),
         ],  ## CHECK THIS
     'NJ': [utils.standardize_data, aggregate_outbreaks.collapse_outbreak_rows],
-    'NM': [utils.standardize_data, close_outbreaks.close_outbreaks],
     'OR': [utils.standardize_data, aggregate_outbreaks.collapse_outbreak_rows],
     'WY': [utils.standardize_data, aggregate_outbreaks.collapse_outbreak_rows],
 }

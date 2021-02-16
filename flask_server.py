@@ -31,6 +31,12 @@ def deploy():
     return  # we have no deployment tasks
 
 
+@app.cli.command("close_outbreaks")
+@click.option('-o', '--outputdir')
+def cli_close_outbreaks(outputdir):
+    close_outbreaks.cli_close_outbreaks_nm_ar(outputdir)
+
+
 @app.cli.command("update_2021_ky")
 @click.option('-o', '--outfile')
 @click.option('--write-to-sheet')
