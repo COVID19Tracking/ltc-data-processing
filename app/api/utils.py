@@ -26,6 +26,7 @@ def standardize_data(df):
     # drop any rows with empty dates
     df.drop(df[pd.isnull(df['Date'])].index, inplace = True)
     df['Date'] = df['Date'].astype(int)
+    return df
 
 
 def cli_for_function(function, outfile, url, write_to_sheet=False):
@@ -34,7 +35,6 @@ def cli_for_function(function, outfile, url, write_to_sheet=False):
     Function is any function that takes in a pandas dataframe and returns a transformed dataframe"""
 
     # URL can be a local CSV or a link
-    orig_url = url
     if not url.endswith('.csv'):
         url = csv_url_for_sheets_url(url)
     df = pd.read_csv(url)

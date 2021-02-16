@@ -34,6 +34,7 @@ def preclean_FL(df):
             return county
         
     df['County'] = df['County'].apply(process_county)
+    return df
 
 
 # cleans up CTP Facility Types and federal/state regulated
@@ -135,48 +136,3 @@ def collapse_outbreak_rows(df, add_outbreak_and_cume=True):
     processed_df.sort_values(
         by=['Date', 'County', 'City', 'Facility'], inplace=True, ignore_index=True)
     return processed_df
-
-
-def do_aggregate_outbreaks(df):
-    flask.current_app.logger.info('DataFrame loaded: %d rows' % df.shape[0])
-    utils.standardize_data(df)
-    flask.current_app.logger.info('After standardizing: %d rows' % df.shape[0])
-
-    # TODO: if more than FL needs special treatment before aggregating outbreaks, factor this out
-    # into something nicer
-    state = set(df['State']).pop()
-    if state == 'FL':
-        preclean_FL(df)
-
-    # for ND, we just propagate the cumulative values but don't add the current outbreak numbers
-    # into that
-    add_outbreak_and_cume = (state != 'ND')
-
-    t1 = time()
-    processed_df = collapse_outbreak_rows(df, add_outbreak_and_cume=add_outbreak_and_cume)
-    t2 = time()
-
-    if state == 'FL':
-        processed_df = postclean_FL(processed_df)
-
-    # this will go into the lambda logs
-    flask.current_app.logger.info('Collapsing %s data took %.1f seconds, %d to %d rows' % (
-        state, (t2 - t1), df.shape[0], processed_df.shape[0]))
-
-    return processed_df
-
-
-def cli_aggregate_outbreaks(outfile, url, write_to_sheet=False):
-    utils.cli_for_function(do_aggregate_outbreaks, outfile, url, write_to_sheet=write_to_sheet)
-
-
-def cli_aggregate_outbreaks_all():
-    urls_df = pd.read_csv('app/api/state_docs_urls.csv')
-
-    states = ['CO', 'DE', 'FL', 'IL', 'ME', 'MN', 'ND', 'NJ', 'OR', 'WY']
-    for state in states:
-        flask.current_app.logger.info('Aggregating outbreaks for %s...' % state)
-        row = urls_df.loc[urls_df.State == state].iloc[0]
-        outfile = 'outputs/%s_aggregate_outbreaks.csv' % state
-        cli_aggregate_outbreaks(outfile=outfile, url=row.Entry, write_to_sheet=row.Final)
-        flask.current_app.logger.info('Done.')

@@ -4,7 +4,8 @@ import click
 
 from app import create_app
 from decouple import config
-from app.api import ltc, aggregate_outbreaks, close_outbreaks, data_quality_checks, check_cumulative, unreset_cumulative
+from app.api import ltc, aggregate_outbreaks, close_outbreaks, data_quality_checks, \
+    check_cumulative, unreset_cumulative, process as process_module
 
 import config as configs
 
@@ -28,19 +29,6 @@ if env_config == 'production':
 def deploy():
     """Run deployment tasks."""
     return  # we have no deployment tasks
-
-
-@app.cli.command("aggregate_outbreaks")
-@click.option('-o', '--outfile')
-@click.option('--write-to-sheet')
-@click.argument("url")
-def cli_aggregate_outbreaks(outfile, url, write_to_sheet):
-    aggregate_outbreaks.cli_aggregate_outbreaks(outfile, url, write_to_sheet=write_to_sheet)
-
-
-@app.cli.command("aggregate_outbreaks_all")
-def cli_aggregate_outbreaks_all():
-    aggregate_outbreaks.cli_aggregate_outbreaks_all()
 
 
 @app.cli.command("close_outbreaks")
@@ -85,3 +73,22 @@ def cli_check_data_types_all():
 @click.option('-w', '--onlythisweek', is_flag=True)
 def check_cumulative_data(outfile, onlythisweek):
     check_cumulative.cli_check_cumulative_data(outfile, onlythisweek)
+
+
+@app.cli.command("process")
+@click.option('--state', default='', help='State abbreviation to run for, e.g. "CA"')
+@click.option('--overwrite-final-gsheet', is_flag=True)
+@click.option('--out-sheet-url', default='',
+    help='Write the processed data to the specified Google Sheet url')
+@click.option('--outfile', default='',
+    help='Write the processed data to CSV file at this local path')
+def process(state, overwrite_final_gsheet, out_sheet_url, outfile):
+    """Process all data from STATE as defined in the Sheet of Sheets.
+
+    The processing functions applied to each state are defined in app/api/process.py. 
+    The resulting output can be saved to the final sheet defined in the Sheet of Sheets
+    (--write-to-gsheets), to a specified sheet url (--out-sheet-url), or to a local CSV file 
+    (--outfile).
+    """
+    process_module.cli_process_state(state, overwrite_final_gsheet=overwrite_final_gsheet,
+        out_sheet_url=out_sheet_url, outfile=outfile)
