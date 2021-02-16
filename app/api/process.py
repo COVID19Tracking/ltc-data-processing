@@ -23,6 +23,11 @@ _FUNCTION_LISTS = {
         aggregate_outbreaks.postclean_FL,
         ],
     'IL': [utils.standardize_data, aggregate_outbreaks.collapse_outbreak_rows],
+    'KY': [
+        utils.standardize_data,
+        unreset_cumulative.preclean_KY,
+        unreset_cumulative.really_update_ky_2021_data,
+        ],
     'ME': [utils.standardize_data, aggregate_outbreaks.collapse_outbreak_rows],
     'MN': [utils.standardize_data, aggregate_outbreaks.collapse_outbreak_rows],
     'ND': [

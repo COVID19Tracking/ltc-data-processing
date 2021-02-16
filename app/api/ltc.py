@@ -32,12 +32,3 @@ def echo():
 @api.route('/test', methods=['GET'])
 def test():
     return "Hello World"
-
-
-@api.route('/aggregate-outbreaks', methods=['POST'])
-def api_aggregate_outbreaks():
-    payload = flask.request.data.decode('utf-8')
-    df = pd.read_csv(io.StringIO(payload))
-    processed_df = aggregate_outbreaks.do_aggregate_outbreaks(df)
-
-    return Response(processed_df.to_csv(index=False), mimetype='text/csv')

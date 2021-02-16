@@ -30,11 +30,13 @@ docker run -it -p 8000:8000 cvapi
 
 ## Command-line interface
 
-Example:
+We're moving toward a single entry point to run all functions for a particular state. Like so:
+
 ```shell
-flask aggregate_outbreaks "https://docs.google.com/spreadsheets/d/1r7DU4FN_spe71nMa2lsIXAXgGEBw8mwyryiDlby3Q6w/edit#gid=273523772" # outputs to STDOUT
-flask aggregate_outbreaks --outfile IL.csv "https://docs.google.com/spreadsheets/d/1r7DU4FN_spe71nMa2lsIXAXgGEBw8mwyryiDlby3Q6w/edit#gid=273523772" # writes to file
-flask aggregate_outbreaks --write-to-sheet "https://docs.google.com/spreadsheets/d/1r7DU4FN_spe71nMa2lsIXAXgGEBw8mwyryiDlby3Q6w/edit#gid=1101937167" "https://docs.google.com/spreadsheets/d/1r7DU4FN_spe71nMa2lsIXAXgGEBw8mwyryiDlby3Q6w/edit#gid=273523772" # publishes to google sheets
-flask close_outbreaks "https://docs.google.com/spreadsheets/d/1r7DU4FN_spe71nMa2lsIXAXgGEBw8mwyryiDlby3Q6w/edit#gid=273523772"
+FLASK_APP=flask_server.py flask process --state CA --outfile=/tmp/ca.csv --overwrite-final-gsheet
+```
+
+Somewhat deprecated examples, soon to be fully deprecated:
+```shell
 flask quality_checks "https://docs.google.com/spreadsheets/d/1r7DU4FN_spe71nMa2lsIXAXgGEBw8mwyryiDlby3Q6w/edit#gid=273523772"
 ```
