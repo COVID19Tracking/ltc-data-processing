@@ -2,6 +2,8 @@
 The main "processing" module.
 """
 
+import os
+
 import flask
 import numpy as np
 import pandas as pd
@@ -22,6 +24,7 @@ _FUNCTION_LISTS = {
         aggregate_outbreaks.collapse_outbreak_rows,
         aggregate_outbreaks.postclean_FL,
         ],
+    'GA': [utils.standardize_data],
     'IL': [utils.standardize_data, aggregate_outbreaks.collapse_outbreak_rows],
     'KY': [
         utils.standardize_data,
@@ -29,6 +32,7 @@ _FUNCTION_LISTS = {
         unreset_cumulative.really_update_ky_2021_data,
         ],
     'ME': [utils.standardize_data, aggregate_outbreaks.collapse_outbreak_rows],
+    'MI': [utils.standardize_data],
     'MN': [utils.standardize_data, aggregate_outbreaks.collapse_outbreak_rows],
     'ND': [
         utils.standardize_data,
@@ -36,7 +40,11 @@ _FUNCTION_LISTS = {
         ],  ## CHECK THIS
     'NJ': [utils.standardize_data, aggregate_outbreaks.collapse_outbreak_rows],
     'NM': [utils.standardize_data, close_outbreaks.close_outbreaks],
+    'OH': [utils.standardize_data],
     'OR': [utils.standardize_data, aggregate_outbreaks.collapse_outbreak_rows],
+    'PA': [utils.standardize_data],
+    'TX': [utils.standardize_data],
+    'VA': [utils.standardize_data, aggregate_outbreaks.collapse_outbreak_rows],
     'WY': [utils.standardize_data, aggregate_outbreaks.collapse_outbreak_rows],
 }
 
@@ -56,49 +64,53 @@ def get_final_url(state, url_df):
     return url_df.loc[url_df.State == state].iloc[0].Final
 
 
-def cli_process_state(state, overwrite_final_gsheet=False, out_sheet_url=None, outfile=None):
+def cli_process_state(states, overwrite_final_gsheet=False, out_sheet_url=None, outdir=None):
     # get the source sheet
     url_df = get_all_state_urls()
-    entry_url = get_entry_url(state, url_df)
-    flask.current_app.logger.info('Reading entry sheet from: %s' % entry_url)
 
-    csv_url = utils.csv_url_for_sheets_url(entry_url)
-    df = pd.read_csv(csv_url)
+    if states == 'ALL':
+        states = _FUNCTION_LISTS.keys()
+    else:
+        states = states.split(',')
 
-    # apply transformation functions in order
-    functions = _FUNCTION_LISTS[state]
-    for func in functions:
-        t1 = time()
-        orig_num_rows = df.shape[0]
-        df = func(df)
-        resulting_num_rows = df.shape[0]
-        t2 = time()
-        flask.current_app.logger.info('Running %s took %.1f seconds, %d to %d rows' % (
-            func.__name__, (t2 - t1), orig_num_rows, resulting_num_rows))
+    flask.current_app.logger.info('Going to process states: %s' % ','.join(states))
 
-    if overwrite_final_gsheet:
-        flask.current_app.logger.info('Writing to final sheet!!')
-        final_url = get_final_url(state, url_df)
-        utils.save_to_sheet(final_url, df)
-        flask.current_app.logger.info('Done.')
+    for state in states:
+        if state not in _FUNCTION_LISTS:
+            flask.current_app.logger.error('Skipping state, no functions found: %s' % state)
+            continue
 
-    if out_sheet_url:
-        flask.current_app.logger.info('Writing to other sheet: %s' % out_sheet_url)
-        utils.save_to_sheet(out_sheet_url, df)
-        flask.current_app.logger.info('Done.')
+        flask.current_app.logger.info('Processing state: %s' % state)
+        entry_url = get_entry_url(state, url_df)
+        flask.current_app.logger.info('Reading entry sheet from: %s' % entry_url)
 
-    if outfile:
-        flask.current_app.logger.info('Writing to local path: %s' % outfile)
-        df.to_csv(outfile, index=False)
-        flask.current_app.logger.info('Done.')
+        csv_url = utils.csv_url_for_sheets_url(entry_url)
+        df = pd.read_csv(csv_url)
 
+        # apply transformation functions in order
+        functions = _FUNCTION_LISTS[state]
+        for func in functions:
+            t1 = time()
+            orig_num_rows = df.shape[0]
+            df = func(df)
+            resulting_num_rows = df.shape[0]
+            t2 = time()
+            flask.current_app.logger.info('Running %s took %.1f seconds, %d to %d rows' % (
+                func.__name__, (t2 - t1), orig_num_rows, resulting_num_rows))
 
-def main(args_list=None):
-    if args_list is None:
-        args_list = sys.argv[1:]
-    args = parser.parse_args(args_list)
-    cli_process_state(args.state, args.write_to_final, args.write_to_other_sheet, args.local_path)
+        if outdir:
+            outfile = os.path.join(outdir, '%s_processed.csv' % state)
+            flask.current_app.logger.info('Writing to local path: %s' % outfile)
+            df.to_csv(outfile, index=False)
+            flask.current_app.logger.info('Done.')
 
+        if overwrite_final_gsheet and not df.empty:  # guard against errors, no empty sheet writes
+            flask.current_app.logger.info('Writing to final sheet!!')
+            final_url = get_final_url(state, url_df)
+            utils.save_to_sheet(final_url, df)
+            flask.current_app.logger.info('Done.')
 
-if __name__ == '__main__':
-    main()
+        if out_sheet_url:
+            flask.current_app.logger.info('Writing to other sheet: %s' % out_sheet_url)
+            utils.save_to_sheet(out_sheet_url, df)
+            flask.current_app.logger.info('Done.')
