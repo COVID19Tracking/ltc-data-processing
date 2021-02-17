@@ -25,6 +25,10 @@ _FUNCTION_LISTS = {
         aggregate_outbreaks.postclean_FL,
         ],
     'GA': [utils.standardize_data],
+    'IA': [
+        utils.standardize_data,
+        close_outbreaks.close_outbreaks,
+        close_outbreaks.clear_outbreak_status],
     'IL': [utils.standardize_data, aggregate_outbreaks.collapse_outbreak_rows],
     'KY': [
         utils.standardize_data,
@@ -49,24 +53,9 @@ _FUNCTION_LISTS = {
 }
 
 
-def get_all_state_urls():
-    # TODO: move this out into something like config.py so it's not buried here
-    url_link = 'https://docs.google.com/spreadsheets/d/1kBL149bp8PWd_NMFm8Gxj-jXToSNEU9YNgQs0o9tREs/gviz/tq?tqx=out:csv&sheet=State_links'
-    url_df = pd.read_csv(url_link)
-    return url_df
-
-
-def get_entry_url(state, url_df):
-    return url_df.loc[url_df.State == state].iloc[0].Entry
-
-
-def get_final_url(state, url_df):
-    return url_df.loc[url_df.State == state].iloc[0].Final
-
-
 def cli_process_state(states, overwrite_final_gsheet=False, out_sheet_url=None, outdir=None):
     # get the source sheet
-    url_df = get_all_state_urls()
+    url_df = utils.get_all_state_urls()
 
     if states == 'ALL':
         states = _FUNCTION_LISTS.keys()
@@ -81,7 +70,7 @@ def cli_process_state(states, overwrite_final_gsheet=False, out_sheet_url=None, 
             continue
 
         flask.current_app.logger.info('Processing state: %s' % state)
-        entry_url = get_entry_url(state, url_df)
+        entry_url = utils.get_entry_url(state, url_df)
         flask.current_app.logger.info('Reading entry sheet from: %s' % entry_url)
 
         csv_url = utils.csv_url_for_sheets_url(entry_url)
@@ -106,7 +95,7 @@ def cli_process_state(states, overwrite_final_gsheet=False, out_sheet_url=None, 
 
         if overwrite_final_gsheet and not df.empty:  # guard against errors, no empty sheet writes
             flask.current_app.logger.info('Writing to final sheet!!')
-            final_url = get_final_url(state, url_df)
+            final_url = utils.get_final_url(state, url_df)
             utils.save_to_sheet(final_url, df)
             flask.current_app.logger.info('Done.')
 

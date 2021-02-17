@@ -45,6 +45,12 @@ def add_info(record, last_collected, all_data, current_date):
     return record
 
 
+def clear_outbreak_status(df):
+    # for some states like IA, we need to remove outbreak statuses from the final product
+    df['Outbrk_Status'] = ''
+    return df
+
+
 def close_outbreaks(df):
     filled_in_state = pd.DataFrame()
 
