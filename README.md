@@ -33,7 +33,7 @@ docker run -it -p 8000:8000 cvapi
 We're moving toward a single entry point to run all functions for a particular state. Like so:
 
 ```shell
-FLASK_APP=flask_server.py flask process --state CA --outfile=/tmp/ca.csv --overwrite-final-gsheet
+FLASK_APP=flask_server.py flask process --states CA,MD --outfile=/tmp/ca.csv --overwrite-final-gsheet
 ```
 
 Somewhat deprecated examples, soon to be fully deprecated:
