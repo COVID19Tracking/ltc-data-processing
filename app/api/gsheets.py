@@ -1,7 +1,10 @@
 import click
 import re
 import gspread
-import datetime
+import json
+import pandas
+import numpy
+from numpyencoder import NumpyEncoder
 
 from gspread import Worksheet, WorksheetNotFound
 from gspread.utils import finditem
@@ -27,6 +30,15 @@ def gid_for_sheets_url(url):
     else:
         click.echo('Invalid Google Sheets URL')
         raise click.Abort()
+
+
+class GsheetsEncoder(NumpyEncoder):
+    """custom serializer that extends NumpyEncoder to turn pandas NaN values into empty strings"""
+    def default(self, obj):
+        if isinstance(obj, pandas._libs.missing.NAType):
+            return ''
+        else:
+            return NumpyEncoder.default(self, obj)
 
 
 def save_to_sheet(target_sheet_url, df):
@@ -57,7 +69,12 @@ def save_to_sheet(target_sheet_url, df):
 
     # turn the data into a 2D array with column headers
     data = [df.columns.to_list()]
-    data.extend(df.fillna('').values.tolist())
+    # remove pure NaN values from the 2D array
+    nans_removed = [[j if not (isinstance(j, float) and numpy.isnan(j)) else '' for j in i] for i in df.values.tolist()]
+    data.extend(nans_removed)
 
-    # post it to the sheet
-    ws.update('A:ZZ', data)
+    # encode the data using our encoder so it's serializable and can be posted to gsheets
+    json_data = json.dumps(data, cls=GsheetsEncoder)
+
+    # turn it back into python objects and post it to the sheet
+    ws.update('A:ZZ', json.loads(json_data))

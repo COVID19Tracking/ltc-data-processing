@@ -6,3 +6,4 @@ python-decouple
 pandas
 click~=7.1.2
 gspread
+numpyencoder~=0.3.0
