@@ -3,6 +3,7 @@ Closing outbreaks: applies to NM and AR
 """
 
 import flask
+import numpy as np
 import pandas as pd
 from time import time
 
@@ -35,6 +36,11 @@ def add_info(record, last_collected, all_data, current_date):
                 (all_data['Date'] == lr) &
                 (all_data['Facility'] == record['Facility'] )]
         record = copy_row(record, row)
+
+        # clear outbreak columns
+        outbreak_cols = utils.make_matching_column_name_map(all_data).values()
+        for col in outbreak_cols:
+            record[col] = np.nan
 
         record['last_recorded'] = lr
         record['Date'] = current_date
