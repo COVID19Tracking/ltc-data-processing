@@ -3,6 +3,21 @@ from app.api.gsheets import csv_url_for_sheets_url, save_to_sheet
 import pandas as pd
 
 
+def get_all_state_urls():
+    # TODO: move this out into something like config.py so it's not buried here
+    url_link = 'https://docs.google.com/spreadsheets/d/1kBL149bp8PWd_NMFm8Gxj-jXToSNEU9YNgQs0o9tREs/gviz/tq?tqx=out:csv&sheet=State_links'
+    url_df = pd.read_csv(url_link)
+    return url_df
+
+
+def get_entry_url(state, url_df):
+    return url_df.loc[url_df.State == state].iloc[0].Entry
+
+
+def get_final_url(state, url_df):
+    return url_df.loc[url_df.State == state].iloc[0].Final
+
+
 # Using the standard facility sheet organization, creates a column name map for corresponding column
 # names, cumulative -> current outbreak metric columns.
 def make_matching_column_name_map(df):
