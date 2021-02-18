@@ -15,7 +15,10 @@ from app.api import utils, ltc, aggregate_outbreaks, close_outbreaks, data_quali
 
 _FUNCTION_LISTS = {
     'AR': [utils.standardize_data, close_outbreaks.close_outbreaks],
-    'CA': [utils.standardize_data],
+    'CA': [
+        utils.standardize_data,
+        aggregate_outbreaks.collapse_facility_rows_no_adding,
+        ],
     'CO': [utils.standardize_data, aggregate_outbreaks.collapse_outbreak_rows],
     'DE': [utils.standardize_data, aggregate_outbreaks.collapse_outbreak_rows],
     'FL': [
@@ -30,6 +33,11 @@ _FUNCTION_LISTS = {
         close_outbreaks.close_outbreaks,
         close_outbreaks.clear_outbreak_status],
     'IL': [utils.standardize_data, aggregate_outbreaks.collapse_outbreak_rows],
+    'KS': [
+        utils.standardize_data,
+        close_outbreaks.close_outbreaks,
+        close_outbreaks.clear_closed_outbreak_status,
+        ],
     'KY': [
         utils.standardize_data,
         unreset_cumulative.preclean_KY,
@@ -74,6 +82,7 @@ def cli_process_state(states, overwrite_final_gsheet=False, out_sheet_url=None, 
         flask.current_app.logger.info('Reading entry sheet from: %s' % entry_url)
 
         csv_url = utils.csv_url_for_sheets_url(entry_url)
+        flask.current_app.logger.info('Reading DF from URL: %s' % csv_url)
         df = pd.read_csv(csv_url)
 
         # apply transformation functions in order
