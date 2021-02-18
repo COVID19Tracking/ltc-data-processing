@@ -53,7 +53,18 @@ def add_info(record, last_collected, all_data, current_date):
 
 def clear_outbreak_status(df):
     # for some states like IA, we need to remove outbreak statuses from the final product
+
+    # TODO: put this funcitonality into add_info instead of clearing after the fact
     df['Outbrk_Status'] = ''
+    return df
+
+
+def clear_closed_outbreak_status(df):
+    # for states like KS, even as we close an outbreak we can't mark it "closed" so just leaving
+    # all "closed" rows blank.
+
+    # TODO: put this funcitonality into add_info instead of clearing after the fact
+    df['Outbrk_Status'] = df.Outbrk_Status.apply(lambda x: '' if x == 'Closed' else x)
     return df
 
 

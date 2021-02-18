@@ -136,3 +136,31 @@ def collapse_outbreak_rows(df, add_outbreak_and_cume=True):
     processed_df.sort_values(
         by=['Date', 'County', 'City', 'Facility'], inplace=True, ignore_index=True)
     return processed_df
+
+
+# applies to CA: takes groups with 1 each of open and closed data points, combines into one "open"
+# row moving the cumulative data into that row - does not add anything, propagates whatever is there
+def combine_open_closed_info_do_not_add(df_group, col_map):
+    if df_group.shape[0] != 2:  # only dealing with cases where there are 2 rows we need to collapse
+        return df_group
+    facility_type = set(df_group.State_Facility_Type).pop()
+    if facility_type not in ['RESIDENTIAL CARE', 'RCFE']:  # return as is
+        return df_group
+    
+    # start with the "open" outbreak row, copy over cumulative data from the other row
+    open_row_df = df_group.loc[df_group['Outbrk_Status'] == 'OPEN'].copy()
+    closed_row = df_group.loc[df_group['Outbrk_Status'] != 'OPEN'].iloc[0]
+    for cume_col in col_map.keys():
+        open_row_df[cume_col] = closed_row[cume_col]
+    
+    return open_row_df
+
+
+def collapse_facility_rows_no_adding(df):
+    col_map = utils.make_matching_column_name_map(df)
+    processed_df = df.groupby(
+        ['Date', 'Facility', 'County', 'State_Facility_Type'], as_index=False).apply(
+        lambda x: combine_open_closed_info_do_not_add(x, col_map))
+    processed_df.sort_values(
+        by=['Date', 'County', 'City', 'Facility'], inplace=True, ignore_index=True)
+    return processed_df
