@@ -28,6 +28,11 @@ _FUNCTION_LISTS = {
         aggregate_outbreaks.postclean_FL,
         ],
     'GA': [utils.standardize_data],
+    'HI': [
+        utils.standardize_data,
+        close_outbreaks.close_outbreaks,
+        close_outbreaks.clear_closed_outbreak_status,
+        ],
     'IA': [
         utils.standardize_data,
         close_outbreaks.close_outbreaks,
@@ -57,6 +62,11 @@ _FUNCTION_LISTS = {
     'PA': [utils.standardize_data],
     'TX': [utils.standardize_data],
     'VA': [utils.standardize_data, aggregate_outbreaks.collapse_outbreak_rows],
+    'VT': [
+        utils.standardize_data,
+        close_outbreaks.close_outbreaks,
+        close_outbreaks.clear_closed_outbreak_status,
+        ],
     'WY': [utils.standardize_data, aggregate_outbreaks.collapse_outbreak_rows],
 }
 
@@ -112,3 +122,28 @@ def cli_process_state(states, overwrite_final_gsheet=False, out_sheet_url=None, 
             flask.current_app.logger.info('Writing to other sheet: %s' % out_sheet_url)
             utils.save_to_sheet(out_sheet_url, df)
             flask.current_app.logger.info('Done.')
+
+
+def cli_check_state(states, outdir=None):
+    # get the source sheet
+    url_df = utils.get_all_state_urls()
+
+    if states != 'ALL':
+        states = states.split(',')
+        url_df = url_df.loc[url_df.State.isin(states)]
+
+    for i, row in url_df.iterrows():
+        state = row.State
+        final_url = row.Final
+        url = utils.csv_url_for_sheets_url(final_url)
+        if row.State == 'FL':
+            # hack hack hack for now LOCAL
+            url = '/Users/julia/Downloads/FL_facilities_processed - FL.csv'
+        flask.current_app.logger.info('Checking state %s from url %s' % (state, url))
+        df = pd.read_csv(url)
+        data_quality_checks.check_data_types(df)
+        errors_df = data_quality_checks.do_quality_checks(df)
+        if not errors_df.empty and outdir:
+            flask.current_app.logger.info('Writing duplicate errors for state %s' % state)
+            outfile = os.path.join(outdir, '%s_dupes.csv' % state)
+            errors_df.to_csv(outfile, index=False)

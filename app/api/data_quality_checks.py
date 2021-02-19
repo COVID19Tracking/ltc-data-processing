@@ -72,61 +72,33 @@ def check_data_types(df):
     flask.current_app.logger.info('Done.')
 
 
-def cli_quality_checks(outfile, url):
+def find_duplicates(df_group, col_map, errors):
+    new_df_subset = df_group.loc[df_group['Outbrk_Status'] == 'OPEN'].copy()
+
+    # expecting only one row/open outbreak; if this isn't true, check whether the columns are
+    # the same and add the duplicate rows to the errors array
+    if new_df_subset.shape[0] > 1:
+        deduped = new_df_subset.drop_duplicates()
+        if deduped.shape[0] > 1:
+            deduped.loc[:, 'error'] = "Multiple open outbreak rows with different data"
+        else:
+            deduped.loc[:, 'error'] = "Duplicate open outbreak rows with same data"
+        errors.append(deduped)
+
+
+def do_quality_checks(df):
     errors = []
+    utils.standardize_data(df)
+    col_map = utils.make_matching_column_name_map(df)
 
-    def find_duplicates(df_group, col_map):
-        new_df_subset = df_group.loc[df_group['Outbrk_Status'] == 'OPEN'].copy()
+    # check for duplicate open outbreaks
+    df.groupby(
+        ['Date', 'Facility', 'County', 'State_Facility_Type'], as_index=False).apply(
+        lambda x: find_duplicates(x, col_map, errors))
 
-        # expecting only one row/open outbreak; if this isn't true, check whether the columns are
-        # the same and add the duplicate rows to the errors array
-        if new_df_subset.shape[0] > 1:
-            deduped = new_df_subset.drop_duplicates()
-            if deduped.shape[0] > 1:
-                deduped.loc[:, 'error'] = "Multiple open outbreak rows with different data"
-            else:
-                deduped.loc[:, 'error'] = "Duplicate open outbreak rows with same data"
-            errors.append(deduped)
-
-    def do_quality_checks(df):
-        utils.standardize_data(df)
-        col_map = utils.make_matching_column_name_map(df)
-
-        # check for duplicate open outbreaks
-        df.groupby(
-            ['Date', 'Facility', 'County', 'State_Facility_Type'], as_index=False).apply(
-            lambda x: find_duplicates(x, col_map))
-
-        # get all the errors we found, turn them into a single dataframe
-        if errors:
-            processed_errors = pd.concat(errors, ignore_index=True)
-            return processed_errors
-        else:  # no errors!
-            return pd.DataFrame()
-
-    utils.cli_for_function(do_quality_checks, outfile, url)
-
-
-def cli_check_data_types(url):
-    if not url.endswith('.csv'):
-        url = utils.csv_url_for_sheets_url(url)
-    df = pd.read_csv(url)
-    check_data_types(df)
-
-
-def cli_check_data_types_all():
-    urls_df = pd.read_csv('app/api/state_docs_urls.csv')
-    for i, row in urls_df.iterrows():
-        url = row.Entry if not (pd.isnull(row.Entry) or row.Entry == '') else row.Final
-        if not url.endswith('.csv'):
-            url = utils.csv_url_for_sheets_url(url)
-        df = pd.read_csv(url)
-        check_data_types(df)
-
-
-def cli_quality_checks_all():
-    urls_df = pd.read_csv('app/api/state_docs_urls.csv')
-    for i, row in urls_df.iterrows():
-        url = row.Entry if not (pd.isnull(row.Entry) or row.Entry == '') else row.Final
-        outfile = 'outputs/%s_duplicate_outbreak.csv' % row.State
-        cli_quality_checks(outfile, url)  # this function expects the unprocessed URL
+    # get all the errors we found, turn them into a single dataframe
+    if errors:
+        processed_errors = pd.concat(errors, ignore_index=True)
+        return processed_errors
+    else:  # no errors!
+        return pd.DataFrame()

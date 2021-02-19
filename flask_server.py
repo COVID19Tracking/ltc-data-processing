@@ -31,29 +31,6 @@ def deploy():
     return  # we have no deployment tasks
 
 
-@app.cli.command("quality_checks")
-@click.option('-o', '--outfile')
-@click.argument("url")
-def cli_quality_checks(outfile, url):
-    data_quality_checks.cli_quality_checks(outfile, url)
-
-
-@app.cli.command("quality_checks_all")
-def cli_quality_checks_all():
-    data_quality_checks.cli_quality_checks_all()
-
-
-@app.cli.command("check_data_types")
-@click.argument("url")
-def cli_check_data_types(url):
-    data_quality_checks.cli_check_data_types(url)
-
-
-@app.cli.command("check_data_types_all")
-def cli_check_data_types_all():
-    data_quality_checks.cli_check_data_types_all()
-
-
 @app.cli.command("check_cumulative_data")
 @click.option('-o', '--outfile')
 @click.option('-w', '--onlythisweek', is_flag=True)
@@ -62,7 +39,7 @@ def check_cumulative_data(outfile, onlythisweek):
 
 
 @app.cli.command("process")
-@click.option('--states', default='', help='State abbreviations to run for, e.g. "ME,DE"')
+@click.option('--states', default='ALL', help='State abbreviations to run for, e.g. "ME,DE"')
 @click.option('--overwrite-final-gsheet', is_flag=True)
 @click.option('--out-sheet-url', default='',
     help='Write the processed data to the specified Google Sheet url')
@@ -71,8 +48,8 @@ def check_cumulative_data(outfile, onlythisweek):
 def process(states, overwrite_final_gsheet, out_sheet_url, outdir):
     """Process all data from the entry sheet in the input states as defined in the Sheet of Sheets.
 
-    States is expected to be a comma-separated list of state abbreviations like "ME,DE".
-    Alternatively, you can pass states=ALL and the functions will be run for every single state that
+    States is expected to be a comma-separated list of state abbreviations like "ME,DE". If this
+    option isn't present, the functions will be run for every single state that
     has any scripts defined.
 
     The processing functions applied to each state are defined in app/api/process.py. 
@@ -82,3 +59,19 @@ def process(states, overwrite_final_gsheet, out_sheet_url, outdir):
     """
     process_module.cli_process_state(states, overwrite_final_gsheet=overwrite_final_gsheet,
         out_sheet_url=out_sheet_url, outdir=outdir)
+
+
+@app.cli.command("check")
+@click.option('--states', default='ALL', help='State abbreviations to run for, e.g. "ME,DE"')
+@click.option('--outdir', default='',
+    help='Write the erroring rows to a CSV file in this local directory')
+def check(states, outdir):
+    """Checks all data from the final sheet in the input states as defined in the Sheet of Sheets.
+
+    States is expected to be a comma-separated list of state abbreviations like "ME,DE". If this
+    option isn't present, checks will be run for every single state that has any scripts defined.
+
+    The resulting output if any duplicate outbreak rows exist are saved as a CSV to a local
+    directory (--outdir).
+    """
+    process_module.cli_check_state(states, outdir=outdir)
