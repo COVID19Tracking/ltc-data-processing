@@ -17,12 +17,12 @@ ALL_DATES = [
     20201008, 20201015, 20201022, 20201029, 20201105,
     20201112, 20201119, 20201126, 20201203, 20201210,
     20201217, 20201224, 20201231, 20210107, 20210114,
-    20210121, 20210128, 20210204, 20210211
+    20210121, 20210128, 20210204, 20210211, 20210211
 ]
 
 def fill_in_missing_dates(df, state_name, onlyThisWeek):
-    flask.current_app.logger.info("filling in LATEST missing dates for %s ..." % state_name)
     if onlyThisWeek:
+        flask.current_app.logger.info("filling in LATEST missing dates for %s ..." % state_name)
         reversed_all_dates = ALL_DATES[::-1]
 
         latest_day = reversed_all_dates[0]
