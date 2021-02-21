@@ -1,6 +1,7 @@
 """
 Closing outbreaks: applies to NM and AR
 """
+from datetime import date, timedelta
 
 import flask
 import numpy as np
@@ -72,12 +73,14 @@ def close_outbreaks(df):
     filled_in_state = pd.DataFrame()
 
     df = df[df['Date'].notna()]
-
-    collection_dates = df[['Date']].drop_duplicates()
     facilities = df[['State', 'County', 'City', 'Facility']].drop_duplicates()
 
-    collection_dates = collection_dates['Date'].tolist()
-    collection_dates.sort()
+    # collection dates are every Thursday date starting from 20200521 until now
+    starting_date = date(2020, 5, 21)
+    collection_dates = []
+    while starting_date <= date.today():
+        collection_dates.append(int(starting_date.strftime('%Y%m%d')))
+        starting_date = starting_date + timedelta(days=7)
 
     last_collected = { }
 
