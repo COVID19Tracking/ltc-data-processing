@@ -10,7 +10,7 @@ import pandas as pd
 from time import time
 
 from app.api import utils, ltc, aggregate_outbreaks, close_outbreaks, data_quality_checks, \
-    check_cumulative, unreset_cumulative
+    check_cumulative, unreset_cumulative, fill_missing_dates
 
 
 _FUNCTION_LISTS = {
@@ -55,7 +55,7 @@ _FUNCTION_LISTS = {
     'OH': [utils.standardize_data],
     'OR': [utils.standardize_data, aggregate_outbreaks.collapse_outbreak_rows],
     'PA': [utils.standardize_data],
-    'TX': [utils.standardize_data],
+    'TX': [utils.standardize_data, fill_missing_dates.fill_missing_dates],
     'VA': [utils.standardize_data, aggregate_outbreaks.collapse_outbreak_rows],
     'WY': [utils.standardize_data, aggregate_outbreaks.collapse_outbreak_rows],
 }
