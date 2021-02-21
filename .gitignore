@@ -138,3 +138,5 @@ logs/
 
 .DS_Store
 outputs/*.csv
+*.ipynb
+

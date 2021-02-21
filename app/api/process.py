@@ -48,8 +48,9 @@ _FUNCTION_LISTS = {
     'MN': [utils.standardize_data, aggregate_outbreaks.collapse_outbreak_rows],
     'ND': [
         utils.standardize_data,
-        lambda df: aggregate_outbreaks.collapse_outbreak_rows(df, add_outbreak_and_cume=False),
-        ],  ## CHECK THIS
+        lambda df: aggregate_outbreaks.collapse_facility_rows_no_adding(
+            df, restrict_facility_types=False),
+        ],
     'NJ': [utils.standardize_data, aggregate_outbreaks.collapse_outbreak_rows],
     'NM': [utils.standardize_data, close_outbreaks.close_outbreaks],
     'OH': [utils.standardize_data],
@@ -57,7 +58,11 @@ _FUNCTION_LISTS = {
     'PA': [utils.standardize_data],
     'TX': [utils.standardize_data],
     'VA': [utils.standardize_data, aggregate_outbreaks.collapse_outbreak_rows],
-    'WY': [utils.standardize_data, aggregate_outbreaks.collapse_outbreak_rows],
+    'WY': [
+        utils.standardize_data,
+        lambda df: aggregate_outbreaks.collapse_outbreak_rows(
+            df, leave_single_row_groups_alone=True),
+        ],
 }
 
 
