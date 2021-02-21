@@ -75,12 +75,18 @@ def close_outbreaks(df):
     df = df[df['Date'].notna()]
     facilities = df[['State', 'County', 'City', 'Facility']].drop_duplicates()
 
-    # collection dates are every Thursday date starting from 20200521 until now
+    # collection dates are every Thursday date starting from 20200521 until now, as well as
+    # everything else in the file
+    existing_date_set = set(df['Date'])
+
     starting_date = date(2020, 5, 21)
     collection_dates = []
     while starting_date <= date.today():
         collection_dates.append(int(starting_date.strftime('%Y%m%d')))
         starting_date = starting_date + timedelta(days=7)
+
+    # combine the Thursday collection dates we want with any other collection dates in this file
+    collection_dates = sorted(list(set(collection_dates).union(existing_date_set)))
 
     last_collected = { }
 
