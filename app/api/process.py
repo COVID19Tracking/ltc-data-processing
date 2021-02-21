@@ -60,6 +60,7 @@ _FUNCTION_LISTS = {
     'VA': [utils.standardize_data, aggregate_outbreaks.collapse_outbreak_rows],
     'WY': [
         utils.standardize_data,
+        close_outbreaks.close_outbreaks,
         lambda df: aggregate_outbreaks.collapse_outbreak_rows(
             df, leave_single_row_groups_alone=True),
         ],
