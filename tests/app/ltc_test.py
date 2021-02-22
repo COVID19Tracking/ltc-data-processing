@@ -1,15 +1,40 @@
 import pytest
 import filecmp
 import os
+import tempfile
+import shutil
 
 import pandas as pd
 
+import flask_server
 from app.api.close_outbreaks import close_outbreaks
+from app.api.fill_missing_dates import fill_missing_dates
+
+@pytest.fixture(scope="session", autouse=True)
+def app_context():
+    with flask_server.app.app_context():
+        yield
 
 def test_close_outbreaks():
     test_csv = "tests/app/fixtures/close_outbreak_nm_example.csv"
     df = pd.read_csv(test_csv)
     closed = close_outbreaks(df)
-    closed.to_csv("test_nm_closed_outbreak.csv", index=False)
-    assert filecmp.cmp("test_nm_closed_outbreak.csv", "tests/app/fixtures/expected_close_outbreak_nm_example.csv")
-    os.remove("test_nm_closed_outbreak.csv")
+
+    temp_file = tempfile.NamedTemporaryFile(delete=False)
+
+    closed.to_csv(temp_file.name, index = False)
+    assert filecmp.cmp(temp_file.name, "tests/app/fixtures/expected_close_outbreak_nm_example.csv")
+
+    os.remove(temp_file.name)
+
+def test_fill_in_mising_dates_non_thursday():
+    test_csv = "tests/app/fixtures/state_with_missing_date_not_a_thursday.csv"
+    df = pd.read_csv(test_csv)
+    filled = fill_missing_dates(df)
+
+    temp_file = tempfile.NamedTemporaryFile(delete=False)
+
+    filled.to_csv(temp_file.name, index = False)
+    assert filecmp.cmp(temp_file.name, "tests/app/fixtures/expected_state_with_missing_dates.csv")
+
+    os.remove(temp_file.name)
