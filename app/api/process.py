@@ -25,6 +25,7 @@ _FUNCTION_LISTS = {
     'FL': [
         utils.standardize_data,
         aggregate_outbreaks.preclean_FL,
+        aggregate_outbreaks.fill_state_facility_type_FL,
         aggregate_outbreaks.collapse_outbreak_rows,
         aggregate_outbreaks.postclean_FL,
         ],

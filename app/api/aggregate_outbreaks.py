@@ -36,6 +36,50 @@ def preclean_FL(df):
     df['County'] = df['County'].apply(process_county)
     return df
 
+# fills empty State Facility Types and CMS IDs using matching facility rows with types
+# this is optimized for FL
+def fill_state_facility_type_FL(df):
+
+    # process records that have no state type
+    def process_no_type(record):
+        # if there is alreay a state type, return
+        if(not record['State_Facility_Type'] == ''):
+            return record
+
+        # grab all facilities with matching names
+        matches = df.loc[(df['Facility'] == record['Facility']) & ~(df['State_Facility_Type'] == '')]
+        matches = matches.dropna(subset=['State_Facility_Type'])
+        facility_types = matches['State_Facility_Type'].unique()
+
+        # if both NH and ALF/ICF appear in the types for matching facilities, return
+        # this is to be extra conservative
+        if(('ALF' in facility_types or 'ICF' in facility_types) and 'NH' in facility_types):
+            return record
+
+        # grab most common type and CMS id amongst the matches
+        # this is probably redundant but could catch issues like a non-repeated typo in a CMS id
+        ftype = matches['State_Facility_Type'].mode()
+        matches = matches.dropna(subset=['CMS_ID'])
+        cms = matches['CMS_ID'].mode()
+
+        # if there is no matching state type, return
+        if(ftype.empty):
+            return record
+        else:
+            record['State_Facility_Type'] = ftype[0]
+
+        # if there is no matching CMS id, return (e.g. the ftype is ALF and there is no CMS ID found)
+        if(cms.empty):
+            return record
+        else:
+            # only set new CMS ID if the ftype is NH
+            if(not ftype[0] == 'NH'):
+                return record
+            record['CMS_ID'] = cms[0]
+        return record
+    df = df.apply(process_no_type, axis = 1)
+    return df
+
 
 # cleans up CTP Facility Types and federal/state regulated
 # this is optimized for FL - other states have different labels
