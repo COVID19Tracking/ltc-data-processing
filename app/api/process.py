@@ -17,10 +17,11 @@ _FUNCTION_LISTS = {
     'AR': [utils.standardize_data, close_outbreaks.close_outbreaks],
     'CA': [
         utils.standardize_data,
-        aggregate_outbreaks.collapse_facility_rows_no_adding,
+        lambda df: aggregate_outbreaks.collapse_facility_rows_no_adding(
+            df, restrict_facility_types=True),
         ],
     'CO': [utils.standardize_data, aggregate_outbreaks.collapse_outbreak_rows],
-    'DE': [utils.standardize_data, aggregate_outbreaks.collapse_outbreak_rows],
+    'DE': [utils.standardize_data, aggregate_outbreaks.collapse_facility_rows_no_adding],
     'FL': [
         utils.standardize_data,
         aggregate_outbreaks.preclean_FL,
@@ -31,17 +32,15 @@ _FUNCTION_LISTS = {
     'HI': [
         utils.standardize_data,
         close_outbreaks.close_outbreaks,
-        close_outbreaks.clear_closed_outbreak_status,
         ],
     'IA': [
         utils.standardize_data,
         close_outbreaks.close_outbreaks,
-        close_outbreaks.clear_outbreak_status],
+        ],
     'IL': [utils.standardize_data, aggregate_outbreaks.collapse_outbreak_rows],
     'KS': [
         utils.standardize_data,
         close_outbreaks.close_outbreaks,
-        close_outbreaks.clear_closed_outbreak_status,
         ],
     'KY': [
         utils.standardize_data,
@@ -51,6 +50,7 @@ _FUNCTION_LISTS = {
     'ME': [utils.standardize_data, aggregate_outbreaks.collapse_outbreak_rows],
     'MI': [utils.standardize_data],
     'MN': [utils.standardize_data, aggregate_outbreaks.collapse_outbreak_rows],
+    'NC': [utils.standardize_data, close_outbreaks.close_outbreaks],
     'ND': [
         utils.standardize_data,
         lambda df: aggregate_outbreaks.collapse_outbreak_rows(df, add_outbreak_and_cume=False),
@@ -60,13 +60,15 @@ _FUNCTION_LISTS = {
     'OH': [utils.standardize_data],
     'OR': [utils.standardize_data, aggregate_outbreaks.collapse_outbreak_rows],
     'PA': [utils.standardize_data],
+    'TN': [utils.standardize_data, close_outbreaks.close_outbreaks],
     'TX': [utils.standardize_data, fill_missing_dates.fill_missing_dates],
+    'UT': [utils.standardize_data, close_outbreaks.close_outbreaks],
     'VA': [utils.standardize_data, aggregate_outbreaks.collapse_outbreak_rows],
     'VT': [
         utils.standardize_data,
         close_outbreaks.close_outbreaks,
-        close_outbreaks.clear_closed_outbreak_status,
         ],
+    'WI': [utils.standardize_data, close_outbreaks.close_outbreaks],
     'WY': [utils.standardize_data, aggregate_outbreaks.collapse_outbreak_rows],
 }
 
