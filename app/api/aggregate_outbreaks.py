@@ -36,6 +36,7 @@ def preclean_FL(df):
     df['County'] = df['County'].apply(process_county)
     return df
 
+
 # fills empty State Facility Types and CMS IDs using matching facility rows with types
 # this is optimized for FL
 def fill_state_facility_type_FL(df):
@@ -78,6 +79,20 @@ def fill_state_facility_type_FL(df):
             record['CMS_ID'] = cms[0]
         return record
     df = df.apply(process_no_type, axis = 1)
+    return df
+
+
+# sets outbreak status to OPEN if facility has outbreak cases, and removes OPEN if no cases are listed
+# this is optimized for FL
+def fill_outbreak_status_FL(df):
+
+    def set_outbreak(record):
+        if(record['Outbrk_Res_Pos'] != '' or record['Outbrk_Staff_Pos'] != ''):
+            record['Outbrk_Status'] = 'OPEN'
+        elif(record['Outbrk_Status'] == 'OPEN'):
+            record['Outbrk_Status'] == ''
+        return record
+    df = df.apply(set_outbreak, axis = 1)
     return df
 
 
