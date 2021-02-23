@@ -10,7 +10,7 @@ import pandas as pd
 
 from app.api import utils
 
-_NO_DATA = {'NO DATA', 'Not Reported'}
+_NO_DATA = {'NO DATA', 'Not Reported', 'Data Pending', 'Closed'}
 
 def replace_no_data(df):
     cume_cols = [x for x in df.columns if x.startswith('Cume_')]
