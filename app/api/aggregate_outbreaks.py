@@ -128,7 +128,7 @@ def fill_outbreak_status_FL(df):
         if(not pd.isnull(record['Outbrk_Res_Pos']) or not pd.isnull(record['Outbrk_Staff_Pos'])):
             record['Outbrk_Status'] = 'OPEN'
         else:
-            record['Outbrk_Status'] == ''
+            record['Outbrk_Status'] = np.nan
         return record
     df = df.apply(set_outbreak, axis = 1)
     return df
