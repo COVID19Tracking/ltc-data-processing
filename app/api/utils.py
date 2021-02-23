@@ -41,6 +41,9 @@ def standardize_data(df):
     # drop any rows with empty dates
     df.drop(df[pd.isnull(df['Date'])].index, inplace = True)
     df['Date'] = df['Date'].astype(int)
+
+    # drop full duplicates
+    df.drop_duplicates(inplace=True)
     return df
 
 

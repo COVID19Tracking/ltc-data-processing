@@ -30,19 +30,10 @@ _FUNCTION_LISTS = {
         aggregate_outbreaks.postclean_FL,
         ],
     'GA': [utils.standardize_data],
-    'HI': [
-        utils.standardize_data,
-        close_outbreaks.close_outbreaks,
-        ],
-    'IA': [
-        utils.standardize_data,
-        close_outbreaks.close_outbreaks,
-        ],
+    'HI': [utils.standardize_data, close_outbreaks.close_outbreaks],
+    'IA': [utils.standardize_data, close_outbreaks.close_outbreaks],
     'IL': [utils.standardize_data, aggregate_outbreaks.collapse_outbreak_rows],
-    'KS': [
-        utils.standardize_data,
-        close_outbreaks.close_outbreaks,
-        ],
+    'KS': [utils.standardize_data, close_outbreaks.close_outbreaks],
     'KY': [
         utils.standardize_data,
         unreset_cumulative.preclean_KY,
@@ -50,7 +41,10 @@ _FUNCTION_LISTS = {
         ],
     'ME': [utils.standardize_data, aggregate_outbreaks.collapse_outbreak_rows],
     'MI': [utils.standardize_data],
-    'MN': [utils.standardize_data, aggregate_outbreaks.collapse_outbreak_rows],
+    'MN': [
+        utils.standardize_data,
+        lambda df: aggregate_outbreaks.collapse_facility_rows_no_adding(
+            df, use_facility_type_to_group=False)],
     'NC': [utils.standardize_data, close_outbreaks.close_outbreaks],
     'ND': [
         utils.standardize_data,
@@ -65,10 +59,7 @@ _FUNCTION_LISTS = {
     'TX': [utils.standardize_data, fill_missing_dates.fill_missing_dates],
     'UT': [utils.standardize_data, close_outbreaks.close_outbreaks],
     'VA': [utils.standardize_data, aggregate_outbreaks.collapse_outbreak_rows],
-    'VT': [
-        utils.standardize_data,
-        close_outbreaks.close_outbreaks,
-        ],
+    'VT': [utils.standardize_data, close_outbreaks.close_outbreaks],
     'WI': [utils.standardize_data, close_outbreaks.close_outbreaks],
     'WY': [utils.standardize_data, aggregate_outbreaks.collapse_outbreak_rows],
 }
