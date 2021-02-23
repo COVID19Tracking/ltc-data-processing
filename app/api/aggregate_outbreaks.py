@@ -82,6 +82,37 @@ def fill_state_facility_type_FL(df):
     return df
 
 
+# fills rows with an empty county using matching facility rows
+# this is optimized for FL
+def fill_county_FL(df):
+
+    # process records that have no county
+    def process_no_type(record):
+        # if there is alreay a county, return
+        if(not record['County'] == ''):
+            return record
+
+        # grab all facilities with matching names that have assigned counties
+        matches = df.loc[(df['Facility'] == record['Facility']) & ~(df['County'] == '')]
+
+        ftype = record['State_Facility_Type']
+        # if the record has a specified type, only use matches with the same type
+        if(ftype):
+            matches = matches.loc[(matches['State_Facility_Type'] == ftype)]
+
+        # grab unique results
+        county = matches['County'].unique()
+
+        # if there is no match or more than one, return
+        if(county.shape[0] > 1 or county.shape[0] == 0):
+            return record
+        else:
+            record['County'] = county[0]
+        return record
+    df = df.apply(process_no_type, axis = 1)
+    return df
+
+
 # sets outbreak status to OPEN if facility has outbreak cases, and removes OPEN if no cases are listed
 # this is optimized for FL
 def fill_outbreak_status_FL(df):
