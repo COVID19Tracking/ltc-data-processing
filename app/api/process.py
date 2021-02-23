@@ -9,7 +9,7 @@ import pandas as pd
 from time import time
 
 from app.api import utils, aggregate_outbreaks, close_outbreaks, data_quality_checks, \
-    unreset_cumulative
+    unreset_cumulative, replace_no_data
 
 
 _FUNCTION_LISTS = {
@@ -45,7 +45,7 @@ _FUNCTION_LISTS = {
         unreset_cumulative.really_update_ky_2021_data,
         utils.post_processing
         ],
-    'LA': [utils.standardize_data, utils.post_processing],
+    'LA': [utils.standardize_data, replace_no_data.replace_no_data, utils.post_processing],
     'MA': [utils.standardize_data, utils.post_processing],
     'MD': [utils.standardize_data, utils.post_processing],
     'ME': [utils.standardize_data, aggregate_outbreaks.collapse_outbreak_rows, utils.post_processing],
@@ -70,7 +70,7 @@ _FUNCTION_LISTS = {
     'OH': [utils.standardize_data, utils.post_processing],
     'OK': [utils.standardize_data, utils.post_processing],
     'OR': [utils.standardize_data, aggregate_outbreaks.collapse_outbreak_rows, utils.post_processing],
-    'PA': [utils.standardize_data, utils.post_processing],
+    'PA': [utils.standardize_data, replace_no_data.replace_no_data, utils.post_processing],
     'RI': [utils.standardize_data, utils.post_processing],
     'SC': [utils.standardize_data, utils.post_processing],
     'TN': [utils.standardize_data, close_outbreaks.close_outbreaks, utils.post_processing],
