@@ -1,4 +1,6 @@
 from os import path
+
+from app.api import fill_missing_dates
 from app.api.gsheets import csv_url_for_sheets_url, save_to_sheet
 import pandas as pd
 
@@ -42,8 +44,20 @@ def standardize_data(df):
     df.drop(df[pd.isnull(df['Date'])].index, inplace = True)
     df['Date'] = df['Date'].astype(int)
 
+    # remove newlines from facility names
+    df['Facility'] = df['Facility'].str.replace('\n', ' ')
+
     # drop full duplicates
     df.drop_duplicates(inplace=True)
+
+    return df
+
+
+# fill in missing dates and sort output. Modifies in place
+def post_processing(df):
+    df = fill_missing_dates.fill_missing_dates(df)
+    df.sort_values(
+        by=['Facility', 'County', 'City', 'Date'], ignore_index=True, inplace=True)
     return df
 
 
