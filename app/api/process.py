@@ -29,6 +29,7 @@ _FUNCTION_LISTS = {
         aggregate_outbreaks.drop_null_row_FL,
         aggregate_outbreaks.fill_state_facility_type_FL,
         aggregate_outbreaks.fill_county_FL,
+        utils.standardize_data,
         aggregate_outbreaks.collapse_facility_rows_no_adding,
         aggregate_outbreaks.postclean_FL,
         ],
