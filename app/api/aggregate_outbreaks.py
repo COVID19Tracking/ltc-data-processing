@@ -118,9 +118,9 @@ def fill_county_FL(df):
 def fill_outbreak_status_FL(df):
 
     def set_outbreak(record):
-        if(record['Outbrk_Res_Pos'] != '' or record['Outbrk_Staff_Pos'] != ''):
+        if(not pd.isnull(record['Outbrk_Res_Pos']) or not pd.isnull(record['Outbrk_Staff_Pos'])):
             record['Outbrk_Status'] = 'OPEN'
-        elif(record['Outbrk_Status'] == 'OPEN'):
+        else:
             record['Outbrk_Status'] == ''
         return record
     df = df.apply(set_outbreak, axis = 1)
