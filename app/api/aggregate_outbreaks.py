@@ -37,6 +37,13 @@ def preclean_FL(df):
     return df
 
 
+# drop rows that have no data
+# this is optimized for FL
+def drop_null_row_FL(df):
+    df = df.dropna(how='all', subset=['Outbrk_Status', 'Res_Census', 'Cume_Res_Death', 'Cume_Staff_Death', 'Cume_ResStaff_Death', 'Cume_ResStaff_ ProbDeath', 'Outbrk_Res_Pos', 'Outbrk_Staff_Pos'])
+    return df
+
+
 # fills empty State Facility Types and CMS IDs using matching facility rows with types
 # this is optimized for FL
 def fill_state_facility_type_FL(df):
