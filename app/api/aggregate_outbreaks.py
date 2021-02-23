@@ -247,12 +247,21 @@ def combine_open_closed_info_do_not_add(df_group, col_map, restrict_facility_typ
     if restrict_facility_types and facility_type not in ['RESIDENTIAL CARE', 'RCFE']:
         return df_group
     
+    # if the rows are the same, return just one of them
+    first_row = df_group.iloc[0]
+    second_row = df_group.iloc[1]
+    if(first_row.equals(second_row)):
+        return df_group.head(1)
+
     # start with the "open" outbreak row, copy over cumulative data from the other row
     open_row_df = df_group.loc[df_group['Outbrk_Status'] == 'OPEN'].copy()
+
+    # if there are multiple non open rows, log and return
     if(open_row_df.shape[0] < 1):
         flask.current_app.logger.info(
                 'Multiple non-open rows with different data: %s' % row_descriptor)
         return df_group
+    # if there are multiple open rows, log and return
     elif(open_row_df.shape[0] > 1):
         flask.current_app.logger.info(
                 'Multiple open rows with different data: %s' % row_descriptor)
