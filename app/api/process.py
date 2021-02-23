@@ -5,7 +5,6 @@ The main "processing" module.
 import os
 
 import flask
-import numpy as np
 import pandas as pd
 from time import time
 
@@ -14,64 +13,74 @@ from app.api import utils, ltc, aggregate_outbreaks, close_outbreaks, data_quali
 
 
 _FUNCTION_LISTS = {
-    'AR': [utils.standardize_data, close_outbreaks.close_outbreaks],
+    'AR': [utils.standardize_data, close_outbreaks.close_outbreaks, utils.post_processing],
     'CA': [
         utils.standardize_data,
         lambda df: aggregate_outbreaks.collapse_facility_rows_no_adding(
             df, restrict_facility_types=True),
+        utils.post_processing
         ],
-    'CO': [utils.standardize_data, aggregate_outbreaks.collapse_outbreak_rows],
-    'DE': [utils.standardize_data, aggregate_outbreaks.collapse_facility_rows_no_adding],
+    'CO': [utils.standardize_data, aggregate_outbreaks.collapse_outbreak_rows, utils.post_processing],
+    'CT': [utils.standardize_data, utils.post_processing],
+    'DC': [utils.standardize_data, utils.post_processing],
+    'DE': [utils.standardize_data, aggregate_outbreaks.collapse_facility_rows_no_adding, utils.post_processing],
     'FL': [
         utils.standardize_data,
         aggregate_outbreaks.preclean_FL,
         aggregate_outbreaks.fill_state_facility_type_FL,
         aggregate_outbreaks.collapse_outbreak_rows,
         aggregate_outbreaks.postclean_FL,
+        utils.post_processing
         ],
-    'GA': [utils.standardize_data],
-    'HI': [
-        utils.standardize_data,
-        close_outbreaks.close_outbreaks,
-        ],
-    'IA': [
-        utils.standardize_data,
-        close_outbreaks.close_outbreaks,
-        ],
-    'IL': [utils.standardize_data, aggregate_outbreaks.collapse_outbreak_rows],
-    'KS': [
-        utils.standardize_data,
-        close_outbreaks.close_outbreaks,
-        ],
+    'GA': [utils.standardize_data, utils.post_processing],
+    'HI': [utils.standardize_data, close_outbreaks.close_outbreaks, utils.post_processing],
+    'IA': [utils.standardize_data, close_outbreaks.close_outbreaks, utils.post_processing],
+    'ID': [utils.standardize_data, utils.post_processing],
+    'IL': [utils.standardize_data, aggregate_outbreaks.collapse_outbreak_rows, utils.post_processing],
+    'IN': [utils.standardize_data, utils.post_processing],
+    'KS': [utils.standardize_data, close_outbreaks.close_outbreaks, utils.post_processing],
     'KY': [
         utils.standardize_data,
         unreset_cumulative.preclean_KY,
         unreset_cumulative.really_update_ky_2021_data,
+        utils.post_processing
         ],
-    'LA': [utils.standardize_data, replace_no_data.replace_no_data],
-    'ME': [utils.standardize_data, aggregate_outbreaks.collapse_outbreak_rows],
-    'MI': [utils.standardize_data],
-    'MN': [utils.standardize_data, aggregate_outbreaks.collapse_outbreak_rows],
-    'NC': [utils.standardize_data, close_outbreaks.close_outbreaks],
+    'LA': [utils.standardize_data, replace_no_data.replace_no_data, utils.post_processing],
+    'MA': [utils.standardize_data, utils.post_processing],
+    'MD': [utils.standardize_data, utils.post_processing],
+    'ME': [utils.standardize_data, aggregate_outbreaks.collapse_outbreak_rows, utils.post_processing],
+    'MI': [utils.standardize_data, utils.post_processing],
+    'MN': [
+        utils.standardize_data,
+        lambda df: aggregate_outbreaks.collapse_facility_rows_no_adding(
+            df, use_facility_type_to_group=False),
+        utils.post_processing],
+    'MO': [utils.standardize_data, utils.post_processing],
+    'MS': [utils.standardize_data, utils.post_processing],
+    'NC': [utils.standardize_data, close_outbreaks.close_outbreaks, utils.post_processing],
     'ND': [
         utils.standardize_data,
         lambda df: aggregate_outbreaks.collapse_outbreak_rows(df, add_outbreak_and_cume=False),
+        utils.post_processing
         ],  ## CHECK THIS
-    'NJ': [utils.standardize_data, aggregate_outbreaks.collapse_outbreak_rows],
-    'NM': [utils.standardize_data, close_outbreaks.close_outbreaks],
-    'OH': [utils.standardize_data],
-    'OR': [utils.standardize_data, aggregate_outbreaks.collapse_outbreak_rows],
-    'PA': [utils.standardize_data, replace_no_data.replace_no_data],
-    'TN': [utils.standardize_data, close_outbreaks.close_outbreaks],
-    'TX': [utils.standardize_data, fill_missing_dates.fill_missing_dates],
-    'UT': [utils.standardize_data, close_outbreaks.close_outbreaks],
-    'VA': [utils.standardize_data, aggregate_outbreaks.collapse_outbreak_rows],
-    'VT': [
-        utils.standardize_data,
-        close_outbreaks.close_outbreaks,
-        ],
-    'WI': [utils.standardize_data, close_outbreaks.close_outbreaks],
-    'WY': [utils.standardize_data, aggregate_outbreaks.collapse_outbreak_rows],
+    'NJ': [utils.standardize_data, aggregate_outbreaks.collapse_outbreak_rows, utils.post_processing],
+    'NM': [utils.standardize_data, close_outbreaks.close_outbreaks, utils.post_processing],
+    'NV': [utils.standardize_data, utils.post_processing],
+    'NY': [utils.standardize_data, utils.post_processing],
+    'OH': [utils.standardize_data, utils.post_processing],
+    'OK': [utils.standardize_data, utils.post_processing],
+    'OR': [utils.standardize_data, aggregate_outbreaks.collapse_outbreak_rows, utils.post_processing],
+    'PA': [utils.standardize_data, replace_no_data.replace_no_data, utils.post_processing],
+    'RI': [utils.standardize_data, utils.post_processing],
+    'SC': [utils.standardize_data, utils.post_processing],
+    'TN': [utils.standardize_data, close_outbreaks.close_outbreaks, utils.post_processing],
+    'TX': [utils.standardize_data, utils.post_processing],
+    'UT': [utils.standardize_data, close_outbreaks.close_outbreaks, utils.post_processing],
+    'VA': [utils.standardize_data, aggregate_outbreaks.collapse_outbreak_rows, utils.post_processing],
+    'VT': [utils.standardize_data, close_outbreaks.close_outbreaks, utils.post_processing],
+    'WI': [utils.standardize_data, close_outbreaks.close_outbreaks, utils.post_processing],
+    'WV': [utils.standardize_data, utils.post_processing],
+    'WY': [utils.standardize_data, aggregate_outbreaks.collapse_outbreak_rows, utils.post_processing],
 }
 
 

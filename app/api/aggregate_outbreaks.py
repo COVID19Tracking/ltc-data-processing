@@ -197,10 +197,17 @@ def combine_open_closed_info_do_not_add(df_group, col_map, restrict_facility_typ
     return open_row_df
 
 
-def collapse_facility_rows_no_adding(df, restrict_facility_types=False):
+def collapse_facility_rows_no_adding(df,
+        restrict_facility_types=False,
+        use_facility_type_to_group=True):
     col_map = utils.make_matching_column_name_map(df)
-    processed_df = df.groupby(
-        ['Date', 'Facility', 'County', 'State_Facility_Type'], as_index=False).apply(
+
+    if use_facility_type_to_group:
+        group_cols = ['Date', 'Facility', 'County', 'State_Facility_Type']
+    else:
+        group_cols = ['Date', 'Facility', 'County']
+
+    processed_df = df.groupby(group_cols, as_index=False).apply(
         lambda x: combine_open_closed_info_do_not_add(
             x, col_map, restrict_facility_types=restrict_facility_types))
     processed_df.sort_values(
