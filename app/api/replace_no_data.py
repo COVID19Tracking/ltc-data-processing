@@ -33,10 +33,10 @@ def replace_no_data(df):
             (df.Date == most_recent_date) &
             (df.Facility == row.Facility) &
             (df.County == row.County) &
-            (df.City == row.City)]
+            (df.City == row.City)].iloc[0]
 
         for col in cume_cols:
             if row[col] in _NO_DATA:
-                df.loc[index, col] = prev_row[col].iloc[0]
+                df.loc[index, col] = prev_row[col]
 
     return df
