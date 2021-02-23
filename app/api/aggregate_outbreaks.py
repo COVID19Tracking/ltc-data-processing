@@ -230,12 +230,26 @@ def collapse_outbreak_rows(df, add_outbreak_and_cume=True):
 def combine_open_closed_info_do_not_add(df_group, col_map, restrict_facility_types=False):
     if df_group.shape[0] != 2:  # only dealing with cases where there are 2 rows we need to collapse
         return df_group
+    new_df_subset = df_group.head(1)
+    row_descriptor = '%s %s %s %s' % (
+        set(new_df_subset['Facility']),
+        set(new_df_subset['State_Facility_Type']),
+        set(new_df_subset['County']),
+        set(new_df_subset['Date']))
     facility_type = set(df_group.State_Facility_Type).pop()
     if restrict_facility_types and facility_type not in ['RESIDENTIAL CARE', 'RCFE']:
         return df_group
     
     # start with the "open" outbreak row, copy over cumulative data from the other row
     open_row_df = df_group.loc[df_group['Outbrk_Status'] == 'OPEN'].copy()
+    if(open_row_df.shape[0] < 1):
+        flask.current_app.logger.info(
+                'Multiple non-open rows with different data: %s' % row_descriptor)
+        return df_group
+    elif(open_row_df.shape[0] > 1):
+        flask.current_app.logger.info(
+                'Multiple open rows with different data: %s' % row_descriptor)
+        return df_group
     closed_row = df_group.loc[df_group['Outbrk_Status'] != 'OPEN'].iloc[0]
     for cume_col in col_map.keys():
         open_row_df[cume_col] = closed_row[cume_col]
