@@ -28,7 +28,6 @@ _FUNCTION_LISTS = {
         utils.standardize_data,
         aggregate_outbreaks.preclean_FL,
         aggregate_outbreaks.fill_state_facility_type_FL,
-        aggregate_outbreaks.collapse_outbreak_rows,
         aggregate_outbreaks.postclean_FL,
         utils.post_processing
         ],
@@ -58,11 +57,7 @@ _FUNCTION_LISTS = {
     'MO': [utils.standardize_data, utils.post_processing],
     'MS': [utils.standardize_data, utils.post_processing],
     'NC': [utils.standardize_data, close_outbreaks.close_outbreaks, utils.post_processing],
-    'ND': [
-        utils.standardize_data,
-        lambda df: aggregate_outbreaks.collapse_outbreak_rows(df, add_outbreak_and_cume=False),
-        utils.post_processing
-        ],  ## CHECK THIS
+    'ND': [utils.standardize_data, utils.post_processing],
     'NJ': [utils.standardize_data, aggregate_outbreaks.collapse_outbreak_rows, utils.post_processing],
     'NM': [utils.standardize_data, close_outbreaks.close_outbreaks, utils.post_processing],
     'NV': [utils.standardize_data, utils.post_processing],
