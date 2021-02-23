@@ -1,5 +1,5 @@
 """
-The functions in this file relate to filling in missing data for a set of dates when 
+The functions in this file relate to filling in missing data 
 """
 
 from datetime import date, timedelta
@@ -26,12 +26,17 @@ def fill_missing_dates(df):
         # is there any data for this date?
         existing_data = df.loc[df.Date == collection_date]
         if existing_data.empty:
-            print('Missing data for %d' % collection_date)
-
             # get the most recent date that there is at least one facility for
             most_recent_date = max(x for x in set(df.Date) if x < collection_date)
+            flask.current_app.logger.info('Missing data for %d. Backfilling cumulative data from %d' % (collection_date, most_recent_date))
             data = df.loc[df.Date == most_recent_date].copy()
             data['Date'] = collection_date
+
+            # blank out all the outbreak data that should not be copied over, leaving only cumulative data
+            cols_to_blank = [col for col in df.columns if col.startswith('Outbrk_')]
+            cols_to_blank.extend(['Res_Census', 'Res_Test',	'Staff_Test', 'PPE'])
+            data[cols_to_blank] = np.nan
+
             missing_dates_dfs.append(data)
 
     processed_df = pd.concat([df, *missing_dates_dfs])
