@@ -24,6 +24,7 @@ def replace_no_data(df):
 
         prev_dates = [x for x in set(facility.Date) if x < row.Date]
         if len(prev_dates) == 0:
+            flask.current_app.logger.info('First outbreak date for %s contains a "no data" string, carrying it forward...' % row.Facility)
             continue
 
         most_recent_date = max(prev_dates)
