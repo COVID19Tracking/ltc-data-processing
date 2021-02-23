@@ -8,8 +8,8 @@ import flask
 import pandas as pd
 from time import time
 
-from app.api import utils, ltc, aggregate_outbreaks, close_outbreaks, data_quality_checks, \
-    check_cumulative, unreset_cumulative, fill_missing_dates, replace_no_data
+from app.api import utils, aggregate_outbreaks, close_outbreaks, data_quality_checks, \
+    unreset_cumulative, replace_no_data
 
 
 _FUNCTION_LISTS = {
