@@ -20,6 +20,10 @@ def get_final_url(state, url_df):
     return url_df.loc[url_df.State == state].iloc[0].Final
 
 
+def get_second_final_url(state, url_df):
+    return url_df.loc[url_df.State == state].iloc[0].Final2
+
+
 # Using the standard facility sheet organization, creates a column name map for corresponding column
 # names, cumulative -> current outbreak metric columns.
 def make_matching_column_name_map(df):
