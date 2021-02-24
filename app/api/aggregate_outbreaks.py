@@ -36,6 +36,14 @@ def preclean_FL(df):
     df['County'] = df['County'].apply(process_county)
     return df
 
+
+# drop rows that have no data
+# this is optimized for FL
+def drop_null_row_FL(df):
+    df = df.dropna(how='all', subset=['Outbrk_Status', 'Res_Census', 'Cume_Res_Death', 'Cume_Staff_Death', 'Cume_ResStaff_Death', 'Cume_ResStaff_ ProbDeath', 'Outbrk_Res_Pos', 'Outbrk_Staff_Pos'])
+    return df
+
+
 # fills empty State Facility Types and CMS IDs using matching facility rows with types
 # this is optimized for FL
 def fill_state_facility_type_FL(df):
@@ -78,6 +86,51 @@ def fill_state_facility_type_FL(df):
             record['CMS_ID'] = cms[0]
         return record
     df = df.apply(process_no_type, axis = 1)
+    return df
+
+
+# fills rows with an empty county using matching facility rows
+# this is optimized for FL
+def fill_county_FL(df):
+
+    # process records that have no county
+    def process_no_type(record):
+        # if there is alreay a county, return
+        if(not record['County'] == ''):
+            return record
+
+        # grab all facilities with matching names that have assigned counties
+        matches = df.loc[(df['Facility'] == record['Facility']) & ~(df['County'] == '')]
+
+        ftype = record['State_Facility_Type']
+        # if the record has a specified type, only use matches with the same type
+        if(ftype):
+            matches = matches.loc[(matches['State_Facility_Type'] == ftype)]
+
+        # grab unique results
+        county = matches['County'].unique()
+
+        # if there is no match or more than one, return
+        if(county.shape[0] > 1 or county.shape[0] == 0):
+            return record
+        else:
+            record['County'] = county[0]
+        return record
+    df = df.apply(process_no_type, axis = 1)
+    return df
+
+
+# sets outbreak status to OPEN if facility has outbreak cases, and removes OPEN if no cases are listed
+# this is optimized for FL
+def fill_outbreak_status_FL(df):
+
+    def set_outbreak(record):
+        if(not pd.isnull(record['Outbrk_Res_Pos']) or not pd.isnull(record['Outbrk_Staff_Pos'])):
+            record['Outbrk_Status'] = 'OPEN'
+        else:
+            record['Outbrk_Status'] = np.nan
+        return record
+    df = df.apply(set_outbreak, axis = 1)
     return df
 
 
@@ -184,12 +237,35 @@ def collapse_outbreak_rows(df, add_outbreak_and_cume=True):
 def combine_open_closed_info_do_not_add(df_group, col_map, restrict_facility_types=False):
     if df_group.shape[0] != 2:  # only dealing with cases where there are 2 rows we need to collapse
         return df_group
+    new_df_subset = df_group.head(1)
+    row_descriptor = '%s %s %s %s' % (
+        set(new_df_subset['Facility']),
+        set(new_df_subset['State_Facility_Type']),
+        set(new_df_subset['County']),
+        set(new_df_subset['Date']))
     facility_type = set(df_group.State_Facility_Type).pop()
     if restrict_facility_types and facility_type not in ['RESIDENTIAL CARE', 'RCFE']:
         return df_group
     
+    # if the rows are the same, return just one of them
+    first_row = df_group.iloc[0]
+    second_row = df_group.iloc[1]
+    if(first_row.equals(second_row)):
+        return df_group.head(1)
+
     # start with the "open" outbreak row, copy over cumulative data from the other row
     open_row_df = df_group.loc[df_group['Outbrk_Status'] == 'OPEN'].copy()
+
+    # if there are multiple non open rows, log and return
+    if(open_row_df.shape[0] < 1):
+        flask.current_app.logger.info(
+                'Multiple non-open rows with different data: %s' % row_descriptor)
+        return df_group
+    # if there are multiple open rows, log and return
+    elif(open_row_df.shape[0] > 1):
+        flask.current_app.logger.info(
+                'Multiple open rows with different data: %s' % row_descriptor)
+        return df_group
     closed_row = df_group.loc[df_group['Outbrk_Status'] != 'OPEN'].iloc[0]
     for cume_col in col_map.keys():
         open_row_df[cume_col] = closed_row[cume_col]
