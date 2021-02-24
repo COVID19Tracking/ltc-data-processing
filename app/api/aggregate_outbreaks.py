@@ -273,12 +273,60 @@ def combine_open_closed_info_do_not_add(df_group, col_map, restrict_facility_typ
     return open_row_df
 
 
-def collapse_facility_rows_no_adding(df, restrict_facility_types=False):
+def collapse_facility_rows_no_adding(df,
+        restrict_facility_types=False,
+        use_facility_type_to_group=True):
     col_map = utils.make_matching_column_name_map(df)
-    processed_df = df.groupby(
-        ['Date', 'Facility', 'County', 'State_Facility_Type'], as_index=False).apply(
+
+    if use_facility_type_to_group:
+        group_cols = ['Date', 'Facility', 'County', 'State_Facility_Type']
+    else:
+        group_cols = ['Date', 'Facility', 'County']
+
+    processed_df = df.groupby(group_cols, as_index=False).apply(
         lambda x: combine_open_closed_info_do_not_add(
             x, col_map, restrict_facility_types=restrict_facility_types))
-    processed_df.sort_values(
-        by=['Date', 'County', 'City', 'Facility'], inplace=True, ignore_index=True)
+    return processed_df
+
+
+def add_non_open_row_if_necessary(df_group, df, col_map):
+    if 'OPEN' not in df_group.Outbrk_Status.values:
+        # this is just closed data, return as is
+        return df_group
+
+    # any non-open rows already in the group?
+    cume_df_group = df_group.loc[df_group.Outbrk_Status != 'OPEN']
+    if not cume_df_group.empty:
+        return df_group
+
+    facility = df_group.Facility.iloc[0]
+    county = df_group.County.iloc[0]
+    group_date = df_group.Date.iloc[0]
+
+    # take the most recent cume row for this facility, carry forward to this group's date, concat
+    closed_facility_rows = df.loc[
+        (df.Facility == facility) & (df.County == county) & (df.Outbrk_Status != 'OPEN')]
+    closed_dates = set(closed_facility_rows.Date)
+    past_dates = [x for x in closed_dates if x < group_date]
+    if past_dates:
+        most_recent_date = max(past_dates)
+        new_row = closed_facility_rows.loc[closed_facility_rows.Date == most_recent_date].copy()
+    
+    else:
+        # make a new closed row from this open outbreak one, copying outbreak data into cumulative
+        new_row = df_group.copy()
+        new_row['Outbrk_Status'] = ''
+        for cume_col, outbrk_col in col_map.items():
+            new_row[cume_col] = new_row[outbrk_col]
+            new_row[outbrk_col] = np.nan
+
+    new_row['Date'] = group_date
+    return pd.concat([df_group, new_row])
+
+
+def add_non_open_rows_for_each_open_row(df):
+    group_cols = ['Date', 'Facility', 'County']
+    col_map = utils.make_matching_column_name_map(df)
+    processed_df = df.groupby(group_cols, as_index=False).apply(
+        lambda x: add_non_open_row_if_necessary(x, df, col_map))
     return processed_df
