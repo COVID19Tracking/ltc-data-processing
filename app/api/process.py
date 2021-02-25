@@ -89,8 +89,8 @@ _FUNCTION_LISTS = {
     'WY': [utils.standardize_data,
            aggregate_outbreaks.collapse_outbreak_rows,
            close_outbreaks.close_outbreaks,
-           lambda df: utils.post_processing(df, close_unknown_outbreaks=True),
-           aggregate_outbreaks.sum_outbreaks],
+           aggregate_outbreaks.sum_outbreaks,
+           lambda df: utils.post_processing(df, close_unknown_outbreaks=True)],
 }
 
 

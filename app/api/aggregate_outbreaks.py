@@ -9,7 +9,7 @@ import numpy as np
 import pandas as pd
 from time import time
 
-from app.api import utils
+from app.api import utils, fill_missing_dates
 
 
 ####################################################################################################
@@ -367,6 +367,8 @@ def process_sum_outbreaks(df):
 
 
 def sum_outbreaks(df):
+    df = fill_missing_dates.fill_missing_dates(df)
+    df['Outbrk_Status'].fillna('Closed', inplace=True)
     processed_df = df.groupby(
         ['Facility', 'County', 'State_Facility_Type'], as_index=False).apply(process_sum_outbreaks)
     return processed_df
