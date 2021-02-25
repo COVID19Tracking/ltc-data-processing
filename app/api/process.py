@@ -86,7 +86,11 @@ _FUNCTION_LISTS = {
     'VT': [utils.standardize_data, close_outbreaks.close_outbreaks, utils.post_processing],
     'WI': [utils.standardize_data, close_outbreaks.close_outbreaks, utils.post_processing],
     'WV': [utils.standardize_data, utils.post_processing],
-    'WY': [utils.standardize_data, aggregate_outbreaks.collapse_outbreak_rows, utils.post_processing],
+    'WY': [utils.standardize_data,
+           aggregate_outbreaks.collapse_outbreak_rows,
+           close_outbreaks.close_outbreaks,
+           aggregate_outbreaks.sum_outbreaks,
+           lambda df: utils.post_processing(df, close_unknown_outbreaks=True)],
 }
 
 

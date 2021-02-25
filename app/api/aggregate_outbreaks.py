@@ -9,7 +9,7 @@ import numpy as np
 import pandas as pd
 from time import time
 
-from app.api import utils
+from app.api import utils, fill_missing_dates
 
 
 ####################################################################################################
@@ -329,4 +329,46 @@ def add_non_open_rows_for_each_open_row(df):
     col_map = utils.make_matching_column_name_map(df)
     processed_df = df.groupby(group_cols, as_index=False).apply(
         lambda x: add_non_open_row_if_necessary(x, df, col_map))
+    return processed_df
+
+
+# accepts a group of facilities as df, building up a running total of cumulative values from past closed outbreaks
+# when new outbreaks open, add in the running total of cumulative values from past outbreaks
+def process_sum_outbreaks(df):
+    df.sort_values(by=['Date'], ignore_index=True, inplace=True)
+    col_map = utils.make_matching_column_name_map(df)
+    running_cumulative_values = None
+
+    def apply_sum(row):
+        index = row.name
+        nonlocal running_cumulative_values
+
+        # if our row is open and the above row is closed, look up at the past closed outbreak
+        if index-1 > 0 and row["Outbrk_Status"].upper() == "OPEN" \
+                and df.iloc[index-1]["Outbrk_Status"].upper() == "CLOSED":
+            # save the closed outbreak's cumulative numbers as the running total
+            if running_cumulative_values is None:
+                running_cumulative_values = df.iloc[index-1][col_map.keys()].fillna(0)
+            else:  # or if we already have a running total, add to it
+                running_cumulative_values = running_cumulative_values + df.iloc[index-1][col_map.keys()].fillna(0)
+
+        # if there are running cumulative values to apply, add them to our cumulative values
+        if running_cumulative_values is not None:
+            for col in running_cumulative_values.keys():
+                if pd.isna(row[col]):  # ensure we're not summing NA values because they sum to NA
+                    row[col] = 0
+                val = running_cumulative_values[col] + row[col]
+                row[col] = val if val > 0 else pd.NA
+
+        return row
+
+    df = df.apply(apply_sum, axis=1)
+    return df
+
+
+def sum_outbreaks(df):
+    df = fill_missing_dates.fill_missing_dates(df)
+    df['Outbrk_Status'].fillna('Closed', inplace=True)
+    processed_df = df.groupby(
+        ['Facility', 'County', 'State_Facility_Type'], as_index=False).apply(process_sum_outbreaks)
     return processed_df

@@ -58,10 +58,15 @@ def standardize_data(df):
 
 
 # fill in missing dates and sort output. Modifies in place
-def post_processing(df):
+# if close_unknown_outbreaks is true, weeks with missing outbreak status will be closed
+def post_processing(df, close_unknown_outbreaks=False):
     df = fill_missing_dates.fill_missing_dates(df)
+
+    if close_unknown_outbreaks:
+        df['Outbrk_Status'].fillna('Closed', inplace=True)
+
     df.sort_values(
-        by=['Facility', 'County', 'City', 'Date'], ignore_index=True, inplace=True)
+        by=['Facility', 'County', 'City', 'State_Facility_Type', 'Date'], ignore_index=True, inplace=True)
     return df
 
 
