@@ -5,6 +5,7 @@ The main "processing" module.
 import os
 
 import flask
+import numpy as np
 import pandas as pd
 from time import time
 
@@ -64,7 +65,6 @@ _FUNCTION_LISTS = {
     'NC': [utils.standardize_data, close_outbreaks.close_outbreaks, utils.post_processing],
     'ND': [
         utils.standardize_data,
-        aggregate_outbreaks.add_non_open_rows_for_each_open_row,
         lambda df: aggregate_outbreaks.collapse_facility_rows_no_adding(
             df, use_facility_type_to_group=False),
         utils.post_processing
@@ -86,7 +86,11 @@ _FUNCTION_LISTS = {
     'VT': [utils.standardize_data, close_outbreaks.close_outbreaks, utils.post_processing],
     'WI': [utils.standardize_data, close_outbreaks.close_outbreaks, utils.post_processing],
     'WV': [utils.standardize_data, utils.post_processing],
-    'WY': [utils.standardize_data, aggregate_outbreaks.collapse_outbreak_rows, utils.post_processing],
+    'WY': [utils.standardize_data,
+           aggregate_outbreaks.collapse_outbreak_rows,
+           close_outbreaks.close_outbreaks,
+           aggregate_outbreaks.sum_outbreaks,
+           lambda df: utils.post_processing(df, close_unknown_outbreaks=True)],
 }
 
 
@@ -134,7 +138,17 @@ def cli_process_state(states, overwrite_final_gsheet=False, out_sheet_url=None, 
         if overwrite_final_gsheet and not df.empty:  # guard against errors, no empty sheet writes
             flask.current_app.logger.info('Writing to final sheet!!')
             final_url = utils.get_final_url(state, url_df)
-            utils.save_to_sheet(final_url, df)
+            second_final_url = utils.get_second_final_url(state, url_df)
+            if not pd.isnull(second_final_url):
+                # looking at you TX
+                # split the dataframe into 2, write out halves to the two sheets
+                flask.current_app.logger.info('Saving to 2 separate final sheets...')
+                df1, df2 = np.array_split(df, 2)
+                utils.save_to_sheet(final_url, df1)
+                utils.save_to_sheet(second_final_url, df2)
+            else:
+                utils.save_to_sheet(final_url, df)
+                
             flask.current_app.logger.info('Done.')
 
         if out_sheet_url:
@@ -153,13 +167,20 @@ def cli_check_state(states, outdir=None):
 
     for i, row in url_df.iterrows():
         state = row.State
-        final_url = row.Final
-        url = utils.csv_url_for_sheets_url(final_url)
-        if row.State == 'FL':
-            # hack hack hack for now LOCAL
-            url = '/Users/julia/Downloads/FL_facilities_processed - FL.csv'
+
+        url = utils.csv_url_for_sheets_url(row.Final)
         flask.current_app.logger.info('Checking state %s from url %s' % (state, url))
         df = pd.read_csv(url)
+
+        if not pd.isnull(row.Final2):
+            # the dataframe is split between two sheets, read both and combine into a single one
+            url2 = utils.csv_url_for_sheets_url(row.Final2)
+            flask.current_app.logger.info(
+                'Also reading 2nd final data for state %s from url %s' % (state, url2))
+            df2 = pd.read_csv(url2)
+            df = pd.concat([df, df2])
+            flask.current_app.logger.info('Final row count after merging two sheets: %d' % df.shape[0])
+        
         data_quality_checks.check_data_types(df)
         errors_df = data_quality_checks.do_quality_checks(df)
         if not errors_df.empty and outdir:

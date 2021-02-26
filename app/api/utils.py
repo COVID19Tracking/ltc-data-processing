@@ -20,6 +20,10 @@ def get_final_url(state, url_df):
     return url_df.loc[url_df.State == state].iloc[0].Final
 
 
+def get_second_final_url(state, url_df):
+    return url_df.loc[url_df.State == state].iloc[0].Final2
+
+
 # Using the standard facility sheet organization, creates a column name map for corresponding column
 # names, cumulative -> current outbreak metric columns.
 def make_matching_column_name_map(df):
@@ -54,10 +58,15 @@ def standardize_data(df):
 
 
 # fill in missing dates and sort output. Modifies in place
-def post_processing(df):
+# if close_unknown_outbreaks is true, weeks with missing outbreak status will be closed
+def post_processing(df, close_unknown_outbreaks=False):
     df = fill_missing_dates.fill_missing_dates(df)
+
+    if close_unknown_outbreaks:
+        df['Outbrk_Status'].fillna('Closed', inplace=True)
+
     df.sort_values(
-        by=['Facility', 'County', 'City', 'Date'], ignore_index=True, inplace=True)
+        by=['Facility', 'County', 'City', 'State_Facility_Type', 'Date'], ignore_index=True, inplace=True)
     return df
 
 
