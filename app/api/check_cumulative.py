@@ -2,91 +2,71 @@
 Check for cumulative data decreases from week to week.
 """
 import csv
-from time import time
 
 import flask
 import pandas as pd
 
 from app.api import utils
 
-def do_check_cumulative(outputFile, onlyThisWeek):
-    states = utils.get_all_state_finals()
+def check_cumulative(df, onlyThisWeek=False):
+    fieldnames = [
+        'State',
+        'Facility',
+        'cumulative_field_decresed',
+        'Date',
+        'current_cumulative_value',
+        'Prev Date',
+        'prev_cumulative_value',
+        'CTP_Facility_Type'
+    ]
 
-    with open(outputFile, mode='w') as csv_file:
-        fieldnames = [
-                'State',
-                'Facility',
-                'cumulative_field_decresed',
-                'Date',
-                'current_cumulative_value',
-                'Prev Date',
-                'prev_cumulative_value',
-                'CTP_Facility_Type'
-            ]
+    errors = pd.DataFrame(columns=fieldnames)
 
-        writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
-        writer.writeheader()
+    state_name = set(df['State']).pop()
+    flask.current_app.logger.info('Finding decreased cumulative fields for %s' % state_name)
 
-        def check_cumulative(df):
-            collection_dates = df[['Date']].drop_duplicates()
-            this_week = collection_dates.max()
+    extra_data_standardization(df, state_name)
 
-            facilities = df[['Facility', 'County', 'City', 'CTP_Facility_Type']].drop_duplicates()
-            cume_cols = [x for x in df.columns if x.startswith('Cume_')]
+    collection_dates = df[['Date']].drop_duplicates()
+    this_week = collection_dates.max()
 
-            for _, row in facilities.iterrows():
-                facility = df.loc[
-                    (df.Facility == row.Facility) &
-                    (df.County == row.County) &
-                    (df.City == row.City) &
-                    (df.CTP_Facility_Type == row.CTP_Facility_Type)].reset_index()
+    facilities = df[['Facility', 'County', 'City', 'CTP_Facility_Type']].drop_duplicates()
+    cume_cols = [x for x in df.columns if x.startswith('Cume_')]
 
-                facility = facility.sort_values(by=['Date'])
+    for _, row in facilities.iterrows():
+        facility = df.loc[
+            (df.Facility == row.Facility) &
+            (df.County == row.County) &
+            (df.City == row.City) &
+            (df.CTP_Facility_Type == row.CTP_Facility_Type)].reset_index()
 
-                for f_index, f_row in facility.iterrows():
-                    if f_index == 0:
-                        continue
+        facility = facility.sort_values(by=['Date'])
 
-                    for col in cume_cols:
-                        row_to_write = None
-                        if f_row[col] != -1 and f_row[col] < int(facility.loc[f_index-1, col]):
-                            row_to_write = {'State': f_row['State'],
-                                'Facility': f_row['Facility'],
-                                'Date': f_row['Date'],
-                                'cumulative_field_decresed': col,
-                                'current_cumulative_value': int(f_row[col]),
-                                'Prev Date': facility.loc[f_index-1, 'Date'],
-                                'prev_cumulative_value': int(facility.loc[f_index-1, col]),
-                                'CTP_Facility_Type': f_row['CTP_Facility_Type']}
+        for f_index, f_row in facility.iterrows():
+            if f_index == 0:
+                continue
 
-                        if row_to_write:
-                            if not onlyThisWeek:
-                                writer.writerow(row_to_write)
+            for col in cume_cols:
+                row_to_write = None
+                if f_row[col] != -1 and f_row[col] < int(facility.loc[f_index-1, col]):
+                    row_to_write = {'State': f_row['State'],
+                        'Facility': f_row['Facility'],
+                        'Date': f_row['Date'],
+                        'cumulative_field_decresed': col,
+                        'current_cumulative_value': int(f_row[col]),
+                        'Prev Date': facility.loc[f_index-1, 'Date'],
+                        'prev_cumulative_value': int(facility.loc[f_index-1, col]),
+                        'CTP_Facility_Type': f_row['CTP_Facility_Type']}
 
-                            elif onlyThisWeek and collection_date == this_week:
-                                writer.writerow(row_to_write)
+                if row_to_write:
+                    if not onlyThisWeek:
+                        errors = errors.append(row_to_write, ignore_index=True)
 
-                            break
+                    elif onlyThisWeek and collection_date == this_week:
+                        errors = errors.append(row_to_write, ignore_index=True)
 
-        t1 = time()
-
-        for state in states:
-
-            url = utils.csv_url_for_sheets_url(state)
-            df = pd.read_csv(url)
-
-            state_name = set(df['State']).pop()
-            flask.current_app.logger.info('Generating quality report for %s' % state_name)
-
-            utils.standardize_data(df)
-            extra_data_standardization(df, state_name)
-
-            check_cumulative(df)
-
-        t2 = time()
-
-        # this will go into the lambda logs
-        flask.current_app.logger.info('Generating quality report took %.1f seconds' % (t2 - t1))
+                    break
+    return errors
 
 def transform_RI(record):
     if type(record) is str:
@@ -136,6 +116,3 @@ def extra_data_standardization(df, state_name):
     df.drop(df[df[cume_cols].isin(strings_to_drop).any(1)].index, inplace = True)
 
     df[cume_cols] = df[cume_cols].astype(int)
-
-def cli_check_cumulative_data(outputFile, onlyThisWeek):
-    do_check_cumulative(outputFile, onlyThisWeek)

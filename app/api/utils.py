@@ -11,7 +11,6 @@ def get_all_state_urls():
     url_df = pd.read_csv(url_link)
     return url_df
 
-
 def get_entry_url(state, url_df):
     return url_df.loc[url_df.State == state].iloc[0].Entry
 

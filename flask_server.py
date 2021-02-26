@@ -5,7 +5,7 @@ import click
 from app import create_app
 from decouple import config
 from app.api import ltc, aggregate_outbreaks, close_outbreaks, data_quality_checks, \
-    check_cumulative, unreset_cumulative, process as process_module
+    unreset_cumulative, process as process_module
 
 import config as configs
 
@@ -29,13 +29,6 @@ if env_config == 'production':
 def deploy():
     """Run deployment tasks."""
     return  # we have no deployment tasks
-
-
-@app.cli.command("check_cumulative_data")
-@click.option('-o', '--outfile')
-@click.option('-w', '--onlythisweek', is_flag=True)
-def check_cumulative_data(outfile, onlythisweek):
-    check_cumulative.cli_check_cumulative_data(outfile, onlythisweek)
 
 
 @app.cli.command("process")
