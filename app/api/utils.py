@@ -82,51 +82,7 @@ def cli_for_function(function, outfile, url, write_to_sheet=False):
     else:  # print to STDOUT
         print(processed_df.to_csv(index=False))
 
-
 def get_all_state_finals():
-    states_docs_urls = pd.read_csv("app/api/state_docs_urls.csv")
+    url_link = 'https://docs.google.com/spreadsheets/d/1kBL149bp8PWd_NMFm8Gxj-jXToSNEU9YNgQs0o9tREs/gviz/tq?tqx=out:csv&sheet=State_links'
+    states_docs_urls = pd.read_csv(url_link)
     return states_docs_urls['Final'].tolist()
-
-
-def get_all_states_prioritize_entries():
-    entries, finals = [], []
-    states_docs_urls = pd.read_csv("app/api/state_docs_urls.csv")
-    states_docs_urls = states_docs_urls.fillna(value='')
-    for _, state_row in states_docs_urls.iterrows():
-        if state_row['Entry'] != '':
-            entries.append(state_row['Entry'])
-        else:
-            finals.append(state_row['Final'])
-
-    return (entries, finals)
-
-
-def run_function_on_states(function, entries, finals, outputDir):
-    """
-    Call the function on every google sheets url for the specified states.
-
-    :param [string] entries: a list of state abbreviations, the specified function will run on their Entry sheet
-    :param [string] finals: a list of state abbreviations, the specified function will run on their Final sheet
-    """
-    states_docs_urls = pd.read_csv("app/api/state_docs_urls.csv")
-
-    def process(state_row, column):
-        print("Running function %s on %s %s sheet..." % (function.__name__, state_row['State'], column))
-        url = csv_url_for_sheets_url(state_row[column])
-        df = pd.read_csv(url)
-        processed_df = function(df)
-        return processed_df
-
-    for _, state_row in states_docs_urls.iterrows():
-        if state_row['Entry'] and state_row['State'] in entries:
-            processed_df = process(state_row, 'Entry')
-            if (processed_df is not None) and (not processed_df.empty):
-                processed_df.to_csv(path.join(outputDir, "%s_processed_entry.csv" % state_row['State']), index=False)
-
-        elif state_row['Final'] and state_row['State'] in finals:
-            processed_df = process(state_row, 'Final')
-            if (processed_df is not None) and (not processed_df.empty):
-                processed_df.to_csv(path.join(outputDir, "%s_processed_final.csv" % state_row['State']), index=False)
-
-        else:
-            print("Skipping %s..." % state_row['State'])
