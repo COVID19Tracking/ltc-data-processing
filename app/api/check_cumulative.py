@@ -56,7 +56,6 @@ def check_cumulative(df, onlyThisWeek=False):
                         'CTP_Facility_Type': f_row['CTP_Facility_Type']}
 
                     if not onlyThisWeek or (onlyThisWeek and f_row['Date'] == this_week):
-                        print(f_row['Date'])
                         errors = errors.append(row_to_write, ignore_index=True)
 
                     break
