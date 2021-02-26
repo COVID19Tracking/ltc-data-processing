@@ -27,9 +27,7 @@ def check_cumulative(df, onlyThisWeek=False):
 
     extra_data_standardization(df, state_name)
 
-    collection_dates = df[['Date']].drop_duplicates()
-    this_week = collection_dates.max()
-
+    this_week = df['Date'].max()
     facilities = df[['Facility', 'County', 'City', 'CTP_Facility_Type']].drop_duplicates()
     cume_cols = [x for x in df.columns if x.startswith('Cume_')]
 
@@ -40,14 +38,13 @@ def check_cumulative(df, onlyThisWeek=False):
             (df.City == row.City) &
             (df.CTP_Facility_Type == row.CTP_Facility_Type)].reset_index()
 
-        facility = facility.sort_values(by=['Date'])
+        facility = facility.sort_values(by=['Date']).reset_index()
 
         for f_index, f_row in facility.iterrows():
             if f_index == 0:
                 continue
 
             for col in cume_cols:
-                row_to_write = None
                 if f_row[col] != -1 and f_row[col] < int(facility.loc[f_index-1, col]):
                     row_to_write = {'State': f_row['State'],
                         'Facility': f_row['Facility'],
@@ -58,11 +55,8 @@ def check_cumulative(df, onlyThisWeek=False):
                         'prev_cumulative_value': int(facility.loc[f_index-1, col]),
                         'CTP_Facility_Type': f_row['CTP_Facility_Type']}
 
-                if row_to_write:
-                    if not onlyThisWeek:
-                        errors = errors.append(row_to_write, ignore_index=True)
-
-                    elif onlyThisWeek and collection_date == this_week:
+                    if not onlyThisWeek or (onlyThisWeek and f_row['Date'] == this_week):
+                        print(f_row['Date'])
                         errors = errors.append(row_to_write, ignore_index=True)
 
                     break
