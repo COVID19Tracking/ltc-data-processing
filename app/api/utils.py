@@ -89,8 +89,3 @@ def cli_for_function(function, outfile, url, write_to_sheet=False):
         processed_df.to_csv(outfile, index=False)
     else:  # print to STDOUT
         print(processed_df.to_csv(index=False))
-
-def get_all_state_finals():
-    url_link = 'https://docs.google.com/spreadsheets/d/1kBL149bp8PWd_NMFm8Gxj-jXToSNEU9YNgQs0o9tREs/gviz/tq?tqx=out:csv&sheet=State_links'
-    states_docs_urls = pd.read_csv(url_link)
-    return states_docs_urls['Final'].tolist()
