@@ -69,7 +69,11 @@ _FUNCTION_LISTS = {
             df, use_facility_type_to_group=False),
         utils.post_processing
         ],
-    'NJ': [utils.standardize_data, aggregate_outbreaks.collapse_outbreak_rows, utils.post_processing],
+    'NJ': [utils.standardize_data,
+           close_outbreaks.close_outbreaks,
+           lambda df: aggregate_outbreaks.collapse_outbreak_rows(df.query('Date >= 20201224')),
+           aggregate_outbreaks.nj_special_aggregator,
+           utils.post_processing],
     'NM': [utils.standardize_data, close_outbreaks.close_outbreaks, utils.post_processing],
     'NV': [utils.standardize_data, utils.post_processing],
     'NY': [utils.standardize_data, utils.post_processing],
@@ -92,7 +96,6 @@ _FUNCTION_LISTS = {
            aggregate_outbreaks.sum_outbreaks,
            lambda df: utils.post_processing(df, close_unknown_outbreaks=True)],
 }
-
 
 def cli_process_state(states, overwrite_final_gsheet=False, out_sheet_url=None, outdir=None):
     # get the source sheet
@@ -148,7 +151,7 @@ def cli_process_state(states, overwrite_final_gsheet=False, out_sheet_url=None, 
                 utils.save_to_sheet(second_final_url, df2)
             else:
                 utils.save_to_sheet(final_url, df)
-                
+
             flask.current_app.logger.info('Done.')
 
         if out_sheet_url:

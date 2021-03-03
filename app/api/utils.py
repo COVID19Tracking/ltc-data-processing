@@ -50,6 +50,9 @@ def standardize_data(df):
     # remove newlines from facility names
     df['Facility'] = df['Facility'].str.replace('\n', ' ')
 
+    # remove unwanted special character from facility name
+    df['Facility'] = df['Facility'].str.replace(' §', '')
+
     # drop full duplicates
     df.drop_duplicates(inplace=True)
 
