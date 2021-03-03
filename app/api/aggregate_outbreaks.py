@@ -372,3 +372,37 @@ def sum_outbreaks(df):
     processed_df = df.groupby(
         ['Facility', 'County', 'State_Facility_Type'], as_index=False).apply(process_sum_outbreaks)
     return processed_df
+
+
+def nj_special_aggregator(df):
+    def process_facility(df):
+        col_map = utils.make_matching_column_name_map(df)
+        df.sort_values(by=['Date', 'County', 'City', 'Facility'], inplace=True, ignore_index=True)
+
+        # look for a closed row starting at 2/11 where the previous week was open
+        # and copy out the outbreak data from the previous week
+        start_index = -1
+        outbreak_data_to_add = None
+        target_rows = df.query('Date >= 20210211 and Outbrk_Status == "CLOSED"')
+        for index, row in target_rows.iterrows():
+            if index-1 in df.index and df.loc[index-1]['Outbrk_Status'] == 'OPEN':
+                outbreak_data_to_add = df.loc[index-1][col_map.values()]
+                start_index = index
+        # add the outbreak data to the cumulative data of all rows starting at the start index
+        if outbreak_data_to_add is not None and start_index > 0:
+            for index in range(start_index, df.index.max()+1):
+                # need to do some annoying checks to avoid issues summing NA values
+                for col in col_map.keys():
+                    if pd.isna(df.iloc[index][col]) and pd.isna(outbreak_data_to_add[col_map[col]]):
+                        pass  # NA + NA = NA
+                    elif pd.isna(df.iloc[index][col]) and pd.notna(outbreak_data_to_add[col_map[col]]):
+                        df.at[index, col] = outbreak_data_to_add[col_map[col]]
+                    elif pd.notna(df.iloc[index][col]) and pd.isna(outbreak_data_to_add[col_map[col]]):
+                        pass  # already have an real value, don't try to add NA to it
+                    else:
+                        df.at[index, col] = df.iloc[index][col] + outbreak_data_to_add[col_map[col]]
+        return df
+
+    df = df.groupby(
+        ['Facility', 'County', 'State_Facility_Type'], as_index=False).apply(process_facility)
+    return df
