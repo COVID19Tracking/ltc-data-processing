@@ -377,7 +377,6 @@ def sum_outbreaks(df):
 def nj_special_aggregator(df):
     def process_facility(df):
         col_map = utils.make_matching_column_name_map(df)
-        df['Outbrk_Status'] = df['Outbrk_Status'].str.upper()
         df.sort_values(by=['Date', 'County', 'City', 'Facility'], inplace=True, ignore_index=True)
 
         # look for a closed row starting at 2/11 where the previous week was open
