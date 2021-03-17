@@ -37,7 +37,7 @@ def make_matching_column_name_map(df):
 def standardize_data(df):
     df[['County', 'City', 'Facility', 'Outbrk_Status', 'State_Facility_Type']] = \
         df[['County', 'City', 'Facility', 'Outbrk_Status', 'State_Facility_Type']].fillna(value='')
-    for colname in ['County', 'City', 'Facility', 'Outbrk_Status', 'State_Facility_Type']:
+    for colname in ['County', 'City', 'Facility', 'Outbrk_Status', 'State_Facility_Type', 'CTP_Facility_Type']:
         df[colname] = df[colname].str.upper().str.strip()
 
     # drop any rows with empty dates
