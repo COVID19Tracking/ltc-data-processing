@@ -35,8 +35,8 @@ def make_matching_column_name_map(df):
 
 # Uppercases county/city/facility/outbreak status entries, for easier comparison. Modifies in place
 def standardize_data(df):
-    df[['County', 'City', 'Facility', 'Outbrk_Status', 'State_Facility_Type']] = \
-        df[['County', 'City', 'Facility', 'Outbrk_Status', 'State_Facility_Type']].fillna(value='')
+    df[['County', 'City', 'Facility', 'Outbrk_Status', 'State_Facility_Type', 'CTP_Facility_Type']] = \
+        df[['County', 'City', 'Facility', 'Outbrk_Status', 'State_Facility_Type', 'CTP_Facility_Type']].fillna(value='')
     for colname in ['County', 'City', 'Facility', 'Outbrk_Status', 'State_Facility_Type', 'CTP_Facility_Type']:
         df[colname] = df[colname].str.upper().str.strip()
 
