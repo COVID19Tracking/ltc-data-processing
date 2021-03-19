@@ -93,7 +93,7 @@ def do_quality_checks(df):
 
     # check for duplicate open outbreaks
     df.groupby(
-        ['Date', 'Facility', 'County', 'State_Facility_Type'], as_index=False).apply(
+        ['Date', 'Facility', 'County', 'City', 'State_Facility_Type'], as_index=False).apply(
         lambda x: find_duplicates(x, col_map, errors))
 
     # get all the errors we found, turn them into a single dataframe
