@@ -45,7 +45,11 @@ def check_cumulative(df, onlyThisWeek=False):
                 continue
 
             for col in cume_cols:
-                if f_row[col] != -1 and f_row[col] < int(facility.loc[f_index-1, col]):
+                try:
+                    int(f_row[col])
+                except Exception:  # not an int, but ignore for purposes of this script
+                    continue
+                if int(f_row[col]) != -1 and int(f_row[col]) < int(facility.loc[f_index-1, col]):
                     row_to_write = {'State': f_row['State'],
                         'Facility': f_row['Facility'],
                         'Date': f_row['Date'],
@@ -108,4 +112,4 @@ def extra_data_standardization(df, state_name):
 
     df.drop(df[df[cume_cols].isin(strings_to_drop).any(1)].index, inplace = True)
 
-    df[cume_cols] = df[cume_cols].astype(int)
+    df[cume_cols] = df[cume_cols].astype(int, errors='ignore')

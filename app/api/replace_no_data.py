@@ -6,6 +6,7 @@ there is "NO DATA".
 from datetime import date, timedelta
 
 import flask
+import numpy as np
 import pandas as pd
 
 from app.api import utils
@@ -24,7 +25,10 @@ def replace_no_data(df):
 
         prev_dates = [x for x in set(facility.Date) if x < row.Date]
         if len(prev_dates) == 0:
-            flask.current_app.logger.info('First outbreak date for %s contains a "no data" string, carrying it forward...' % row.Facility)
+            flask.current_app.logger.info('First outbreak date for %s contains a "no data" string, clearing it...' % row.Facility)
+            for col in cume_cols:
+                if row[col] in _NO_DATA:
+                    df.loc[index, col] = np.nan
             continue
 
         most_recent_date = max(prev_dates)
