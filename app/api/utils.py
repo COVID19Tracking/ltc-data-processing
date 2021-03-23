@@ -19,10 +19,6 @@ def get_final_url(state, url_df):
     return url_df.loc[url_df.State == state].iloc[0].Final
 
 
-def get_second_final_url(state, url_df):
-    return url_df.loc[url_df.State == state].iloc[0].Final2
-
-
 # Using the standard facility sheet organization, creates a column name map for corresponding column
 # names, cumulative -> current outbreak metric columns.
 def make_matching_column_name_map(df):
@@ -47,11 +43,13 @@ def standardize_data(df):
     df.drop(df[pd.isnull(df['Date'])].index, inplace = True)
     df['Date'] = df['Date'].astype(int)
 
-    # remove newlines from facility names
-    df['Facility'] = df['Facility'].str.replace('\n', ' ')
-
-    # remove unwanted special character from facility name
-    df['Facility'] = df['Facility'].str.replace(' §', '')
+    for colname in ['Facility', 'County']:
+        # remove newlines from facility names
+        df[colname] = df[colname].str.replace('\n', ' ')
+        # remove unwanted special character from facility name
+        df[colname] = df[colname].str.replace('§', '')
+        df[colname] = df[colname].str.replace('Ͳ','-')
+        df[colname] = df[colname].str.replace('‐', '-')  # insane ascii stuff
 
     # drop full duplicates
     df.drop_duplicates(inplace=True)
@@ -70,25 +68,3 @@ def post_processing(df, close_unknown_outbreaks=False):
     df.sort_values(
         by=['Facility', 'County', 'City', 'State_Facility_Type', 'Date'], ignore_index=True, inplace=True)
     return df
-
-
-def cli_for_function(function, outfile, url, write_to_sheet=False):
-    """Wrap function in a basic command-line interface that fetches data from a google sheets url
-
-    Function is any function that takes in a pandas dataframe and returns a transformed dataframe"""
-
-    # URL can be a local CSV or a link
-    if not url.endswith('.csv'):
-        url = csv_url_for_sheets_url(url)
-    df = pd.read_csv(url)
-
-    # process it and send the result to the appropriate place
-    processed_df = function(df)
-
-    if write_to_sheet:
-        save_to_sheet(write_to_sheet, processed_df)
-
-    if outfile and not processed_df.empty:
-        processed_df.to_csv(outfile, index=False)
-    else:  # print to STDOUT
-        print(processed_df.to_csv(index=False))
