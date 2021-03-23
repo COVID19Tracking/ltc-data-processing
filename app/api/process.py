@@ -141,16 +141,7 @@ def cli_process_state(states, overwrite_final_gsheet=False, out_sheet_url=None, 
         if overwrite_final_gsheet and not df.empty:  # guard against errors, no empty sheet writes
             flask.current_app.logger.info('Writing to final sheet!!')
             final_url = utils.get_final_url(state, url_df)
-            second_final_url = utils.get_second_final_url(state, url_df)
-            if not pd.isnull(second_final_url):
-                # looking at you TX
-                # split the dataframe into 2, write out halves to the two sheets
-                flask.current_app.logger.info('Saving to 2 separate final sheets...')
-                df1, df2 = np.array_split(df, 2)
-                utils.save_to_sheet(final_url, df1)
-                utils.save_to_sheet(second_final_url, df2)
-            else:
-                utils.save_to_sheet(final_url, df)
+            utils.save_to_sheet(final_url, df)
 
             flask.current_app.logger.info('Done.')
 
