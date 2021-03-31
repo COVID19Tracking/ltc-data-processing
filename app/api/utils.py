@@ -43,13 +43,14 @@ def standardize_data(df):
     df.drop(df[pd.isnull(df['Date'])].index, inplace = True)
     df['Date'] = df['Date'].astype(int)
 
-    for colname in ['Facility', 'County']:
+    for colname in ['Facility', 'County', 'City']:
         # remove newlines from facility names
         df[colname] = df[colname].str.replace('\n', ' ')
         # remove unwanted special character from facility name
         df[colname] = df[colname].str.replace('§', '')
         df[colname] = df[colname].str.replace('Ͳ','-')
         df[colname] = df[colname].str.replace('‐', '-')  # insane ascii stuff
+        df[colname] = ' '.join(df[colname].str.split())  # convert random numbers of spaces into one
 
     # drop full duplicates
     df.drop_duplicates(inplace=True)

@@ -159,33 +159,22 @@ def cli_check_state(states, outdir=None):
         states = states.split(',')
         url_df = url_df.loc[url_df.State.isin(states)]
 
-    cumulative_df = pd.DataFrame()
     for i, row in url_df.iterrows():
         state = row.State
 
         url = utils.csv_url_for_sheets_url(row.Final)
         flask.current_app.logger.info('Checking state %s from url %s' % (state, url))
         df = pd.read_csv(url)
-
-        if not pd.isnull(row.Final2):
-            # the dataframe is split between two sheets, read both and combine into a single one
-            url2 = utils.csv_url_for_sheets_url(row.Final2)
-            flask.current_app.logger.info(
-                'Also reading 2nd final data for state %s from url %s' % (state, url2))
-            df2 = pd.read_csv(url2)
-            df = pd.concat([df, df2])
-            flask.current_app.logger.info('Final row count after merging two sheets: %d' % df.shape[0])
-
         data_quality_checks.check_data_types(df)
         errors_df = data_quality_checks.do_quality_checks(df)
-        cumulative_df = cumulative_df.append(check_cumulative.check_cumulative(df))
+        cume_check_df = check_cumulative.check_cumulative(df)
+
+        if not cume_check_df.empty and outdir:
+            flask.current_app.logger.info('Writing cumulative errors for state %s' % state)
+            outfile = os.path.join(outdir, '%s_decreased_cumulative.csv' % state)
+            cume_check_df.to_csv(outfile, index=False)
 
         if not errors_df.empty and outdir:
             flask.current_app.logger.info('Writing duplicate errors for state %s' % state)
             outfile = os.path.join(outdir, '%s_dupes.csv' % state)
             errors_df.to_csv(outfile, index=False)
-
-    if not cumulative_df.empty and outdir:
-        flask.current_app.logger.info('Writing cumulative errors')
-        outfile = os.path.join(outdir, 'decreased_cumulative.csv')
-        cumulative_df.to_csv(outfile, index=False)
