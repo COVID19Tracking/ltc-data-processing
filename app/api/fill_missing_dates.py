@@ -15,7 +15,7 @@ from app.api import utils
 def fill_missing_dates(df):
     starting_date = date(2020, 5, 21)
     collection_dates = []
-    while starting_date <= date.today():
+    while starting_date <= date(2021, 3, 4):
         collection_dates.append(int(starting_date.strftime('%Y%m%d')))
         starting_date = starting_date + timedelta(days=7)
 

@@ -62,7 +62,6 @@ def check_cumulative(df, onlyThisWeek=False):
                     if not onlyThisWeek or (onlyThisWeek and f_row['Date'] == this_week):
                         errors = errors.append(row_to_write, ignore_index=True)
 
-                    break
     return errors
 
 def transform_RI(record):
