@@ -50,7 +50,9 @@ def standardize_data(df):
         df[colname] = df[colname].str.replace('§', '')
         df[colname] = df[colname].str.replace('Ͳ','-')
         df[colname] = df[colname].str.replace('‐', '-')  # insane ascii stuff
-        df[colname] = ' '.join(df[colname].str.split())  # convert random numbers of spaces into one
+
+        # convert random numbers of spaces into one
+        df[colname] = df[colname].apply(lambda x: ' '.join(str(x).upper().split()))
 
     # drop full duplicates
     df.drop_duplicates(inplace=True)
