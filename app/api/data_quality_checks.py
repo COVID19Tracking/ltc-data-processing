@@ -87,9 +87,10 @@ def find_duplicates(df_group, col_map, errors):
 
 
 def find_date_duplicates(df_group, col_map, errors):
-    # we only want to check for data duplicates on the columns with covid data
+    # to constrain our checks for data duplicates to the columns with covid data
     data_cols = [*col_map.keys()] + [*col_map.values()]
     dupes = df_group[df_group.duplicated(subset=data_cols, keep=False)]
+    dupes['error'] = 'Possible error: rows found with duplicate covid data'
     errors.append(dupes)
 
 
