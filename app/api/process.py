@@ -175,7 +175,14 @@ def cli_check_state(states, outdir=None):
             outfile = os.path.join(outdir, '%s_decreased_cumulative.csv' % state)
             cume_check_df.to_csv(outfile, index=False)
 
-        if not errors_df.empty and outdir:
+        dupes = errors_df[errors_df['error'] != 'duplicate date data']
+        date_dupes = errors_df[errors_df['error'] == 'duplicate date data']
+        
+        if not dupes.empty and outdir:    
             flask.current_app.logger.info('Writing duplicate errors for state %s' % state)
             outfile = os.path.join(outdir, '%s_dupes.csv' % state)
-            errors_df.to_csv(outfile, index=False)
+            dupes.to_csv(outfile, index=False)
+        if not date_dupes.empty and outdir:
+            flask.current_app.logger.info('Writing duplicate date data for state %s' % state)
+            outfile = os.path.join(outdir, '%s_date_data_dupes.csv' % state)
+            date_dupes.to_csv(outfile, index=False)
