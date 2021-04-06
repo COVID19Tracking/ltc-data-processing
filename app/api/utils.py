@@ -60,6 +60,31 @@ def standardize_data(df):
     return df
 
 
+# Modifies in place, but also returns a DataFrame so it can be used as a function in process.py.
+def add_ctp_id(df):
+    # TODO: have this read a CSV from some finalized LTC entity resolution output. This is WIP
+    ltc_entity_df = pd.read_csv('/Users/julia/Downloads/ltc_entities_resolved_v1_3.csv')
+    ltc_entity_df.fillna('', inplace=True)
+
+    # for this particular state, construct a lookup of:
+    # {(Facility, City, County, State, CTP_Facility_Type) -> ctp_id}
+    ctp_id_lookup = {}
+    state = [x for x in set(df.State.values) if not pd.isnull(x)][0]
+    for i, row in ltc_entity_df.loc[ltc_entity_df.state == state].iterrows():
+        key = (
+            row.Facility.upper(), row.City.upper(), row.County.upper(),
+            row.ctp_state.upper(), row.CTP_Facility_Type.upper())
+        ctp_id_lookup[key] = row.ctp_id
+
+    # look up CTP ID for the given DF row using Facility, City, County, State, CTP_Facility_Type
+    def get_ctp_id(row):
+        key = (row.Facility, row.City, row.County, row.State, row.CTP_Facility_Type)
+        return ctp_id_lookup.get(key)
+
+    df['ctp_id'] = df.apply(get_ctp_id, axis=1)
+    return df
+
+
 # fill in missing dates and sort output. Modifies in place
 # if close_unknown_outbreaks is true, weeks with missing outbreak status will be closed
 def post_processing(df, close_unknown_outbreaks=False):

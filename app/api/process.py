@@ -14,7 +14,7 @@ from app.api import utils, aggregate_outbreaks, close_outbreaks, data_quality_ch
 
 
 _FUNCTION_LISTS = {
-    'AR': [utils.standardize_data, close_outbreaks.close_outbreaks, utils.post_processing],
+    'AR': [utils.standardize_data, utils.add_ctp_id, close_outbreaks.close_outbreaks, utils.post_processing],
     'CA': [
         utils.standardize_data,
         lambda df: aggregate_outbreaks.collapse_facility_rows_no_adding(
@@ -37,12 +37,12 @@ _FUNCTION_LISTS = {
         utils.post_processing
         ],
     'GA': [utils.standardize_data, utils.post_processing],
-    'HI': [utils.standardize_data, close_outbreaks.close_outbreaks, utils.post_processing],
-    'IA': [utils.standardize_data, close_outbreaks.close_outbreaks, utils.post_processing],
+    'HI': [utils.standardize_data, utils.add_ctp_id, close_outbreaks.close_outbreaks, utils.post_processing],
+    'IA': [utils.standardize_data, utils.add_ctp_id, close_outbreaks.close_outbreaks, utils.post_processing],
     'ID': [utils.standardize_data, utils.post_processing],
     'IL': [utils.standardize_data, aggregate_outbreaks.collapse_outbreak_rows, utils.post_processing],
     'IN': [utils.standardize_data, utils.post_processing],
-    'KS': [utils.standardize_data, close_outbreaks.close_outbreaks, utils.post_processing],
+    'KS': [utils.standardize_data, utils.add_ctp_id, close_outbreaks.close_outbreaks, utils.post_processing],
     'KY': [
         utils.standardize_data,
         unreset_cumulative.preclean_KY,
@@ -57,7 +57,7 @@ _FUNCTION_LISTS = {
     'MN': [utils.standardize_data, drop_no_data.drop_no_data, utils.post_processing],
     'MO': [utils.standardize_data, utils.post_processing],
     'MS': [utils.standardize_data, utils.post_processing],
-    'NC': [utils.standardize_data, close_outbreaks.close_outbreaks, utils.post_processing],
+    'NC': [utils.standardize_data, utils.add_ctp_id, close_outbreaks.close_outbreaks, utils.post_processing],
     'ND': [
         utils.standardize_data,
         lambda df: aggregate_outbreaks.collapse_facility_rows_no_adding(
@@ -65,11 +65,12 @@ _FUNCTION_LISTS = {
         utils.post_processing
         ],
     'NJ': [utils.standardize_data,
+           utils.add_ctp_id,
            close_outbreaks.close_outbreaks,
            lambda df: aggregate_outbreaks.collapse_outbreak_rows(df[df['Date'] >= 20201224]),
            aggregate_outbreaks.nj_special_aggregator,
            utils.post_processing],
-    'NM': [utils.standardize_data, close_outbreaks.close_outbreaks, utils.post_processing],
+    'NM': [utils.standardize_data, utils.add_ctp_id, close_outbreaks.close_outbreaks, utils.post_processing],
     'NV': [utils.standardize_data, utils.post_processing],
     'NY': [utils.standardize_data, utils.post_processing],
     'OH': [utils.standardize_data, utils.post_processing],
@@ -78,15 +79,16 @@ _FUNCTION_LISTS = {
     'PA': [utils.standardize_data, replace_no_data.replace_no_data, utils.post_processing],
     'RI': [utils.standardize_data, utils.post_processing],
     'SC': [utils.standardize_data, utils.post_processing],
-    'TN': [utils.standardize_data, close_outbreaks.close_outbreaks, utils.post_processing],
+    'TN': [utils.standardize_data, utils.add_ctp_id, close_outbreaks.close_outbreaks, utils.post_processing],
     'TX': [utils.standardize_data, utils.post_processing],
-    'UT': [utils.standardize_data, close_outbreaks.close_outbreaks, utils.post_processing],
+    'UT': [utils.standardize_data, utils.add_ctp_id, close_outbreaks.close_outbreaks, utils.post_processing],
     'VA': [utils.standardize_data, aggregate_outbreaks.collapse_outbreak_rows, utils.post_processing],
-    'VT': [utils.standardize_data, close_outbreaks.close_outbreaks, utils.post_processing],
-    'WI': [utils.standardize_data, close_outbreaks.close_outbreaks, utils.post_processing],
+    'VT': [utils.standardize_data, utils.add_ctp_id, close_outbreaks.close_outbreaks, utils.post_processing],
+    'WI': [utils.standardize_data, utils.add_ctp_id, close_outbreaks.close_outbreaks, utils.post_processing],
     'WV': [utils.standardize_data, utils.post_processing],
     'WY': [utils.standardize_data,
            aggregate_outbreaks.collapse_outbreak_rows,
+           utils.add_ctp_id,
            close_outbreaks.close_outbreaks,
            aggregate_outbreaks.sum_outbreaks,
            lambda df: utils.post_processing(df, close_unknown_outbreaks=True)],
