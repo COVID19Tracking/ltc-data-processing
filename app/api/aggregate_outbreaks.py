@@ -179,7 +179,7 @@ def nj_special_aggregator(df):
         # and copy out the outbreak data from the previous week
         start_index = -1
         outbreak_data_to_add = None
-        target_rows = df.query('Date >= 20210211 and Outbrk_Status == "CLOSED"')
+        target_rows = df[(df['Date'] >= 20210211) & (df['Outbrk_Status'] == "CLOSED")]
         for index, row in target_rows.iterrows():
             if index-1 in df.index and df.loc[index-1]['Outbrk_Status'] == 'OPEN':
                 outbreak_data_to_add = df.loc[index-1][col_map.values()]

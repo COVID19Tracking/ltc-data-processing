@@ -72,7 +72,7 @@ _FUNCTION_LISTS = {
         ],
     'NJ': [utils.standardize_data,
            close_outbreaks.close_outbreaks,
-           lambda df: aggregate_outbreaks.collapse_outbreak_rows(df.query('Date >= 20201224')),
+           lambda df: aggregate_outbreaks.collapse_outbreak_rows(df[df['Date'] >= 20201224]),
            aggregate_outbreaks.nj_special_aggregator,
            utils.post_processing],
     'NM': [utils.standardize_data, close_outbreaks.close_outbreaks, utils.post_processing],
