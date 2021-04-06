@@ -86,6 +86,14 @@ def find_duplicates(df_group, col_map, errors):
         errors.append(deduped)
 
 
+def find_date_duplicates(df_group, col_map, errors):
+    # to constrain our checks for data duplicates to the columns with covid data
+    data_cols = [*col_map.keys()] + [*col_map.values()]
+    dupes = df_group[df_group.duplicated(subset=data_cols, keep=False)]
+    dupes['error'] = 'duplicate date data'
+    errors.append(dupes)
+
+
 def do_quality_checks(df):
     errors = []
     utils.standardize_data(df)
@@ -95,6 +103,11 @@ def do_quality_checks(df):
     df.groupby(
         ['Date', 'Facility', 'County', 'City', 'State_Facility_Type'], as_index=False).apply(
         lambda x: find_duplicates(x, col_map, errors))
+
+    # check for duplicate data on the same date
+    df.groupby(
+        ['Date'], as_index=False).apply(
+        lambda x: find_date_duplicates(x, col_map, errors))
 
     # get all the errors we found, turn them into a single dataframe
     if errors:
