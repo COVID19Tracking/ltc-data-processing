@@ -173,7 +173,7 @@ def clear_non_nh_cms_ids_FL(df):
 def nj_special_aggregator(df):
     def process_facility(df):
         col_map = utils.make_matching_column_name_map(df)
-        df.sort_values(by=['Date', 'County', 'City', 'Facility'], inplace=True, ignore_index=True)
+        df.sort_values(by=['Date', 'ctp_id'], inplace=True, ignore_index=True)
 
         # look for a closed row starting at 2/11 where the previous week was open
         # and copy out the outbreak data from the previous week
@@ -200,7 +200,7 @@ def nj_special_aggregator(df):
         return df
 
     df = df.groupby(
-        ['Facility', 'County', 'State_Facility_Type'], as_index=False).apply(process_facility)
+        ['ctp_id'], as_index=False).apply(process_facility)
     return df
 
 
@@ -247,7 +247,7 @@ def sum_outbreaks(df):
     df = fill_missing_dates.fill_missing_dates(df)
     df['Outbrk_Status'].fillna('Closed', inplace=True)
     processed_df = df.groupby(
-        ['Facility', 'County', 'State_Facility_Type'], as_index=False).apply(process_sum_outbreaks)
+        ['ctp_id'], as_index=False).apply(process_sum_outbreaks)
     return processed_df
 
 
@@ -307,12 +307,10 @@ def collapse_outbreak_rows(df, add_outbreak_and_cume=True):
     col_map = utils.make_matching_column_name_map(df)
     # group by facility name and date, collapse each group into one row
     processed_df = df.groupby(
-        ['Date', 'Facility', 'County', 'State_Facility_Type'], as_index=False).apply(
+        ['Date', 'ctp_id'], as_index=False).apply(
         lambda x: collapse_rows_new_header_names(
             x, col_map, add_outbreak_and_cume=add_outbreak_and_cume))
 
-    processed_df.sort_values(
-        by=['Date', 'County', 'City', 'Facility'], inplace=True, ignore_index=True)
     return processed_df
 
 
@@ -358,16 +356,9 @@ def combine_open_closed_info_do_not_add(df_group, col_map, restrict_facility_typ
 
 
 def collapse_facility_rows_no_adding(df,
-        restrict_facility_types=False,
-        use_facility_type_to_group=True):
+        restrict_facility_types=False):
     col_map = utils.make_matching_column_name_map(df)
-
-    if use_facility_type_to_group:
-        group_cols = ['Date', 'Facility', 'County', 'State_Facility_Type']
-    else:
-        group_cols = ['Date', 'Facility', 'County']
-
-    processed_df = df.groupby(group_cols, as_index=False).apply(
+    processed_df = df.groupby(['ctp_id'], as_index=False).apply(
         lambda x: combine_open_closed_info_do_not_add(
             x, col_map, restrict_facility_types=restrict_facility_types))
     return processed_df

@@ -62,7 +62,7 @@ def standardize_data(df):
 
 # Modifies in place, but also returns a DataFrame so it can be used as a function in process.py.
 def add_ctp_id(df):
-    # TODO: have this read a CSV from some finalized LTC entity resolution output. This is WIP
+    # TODO: have this read a CSV from some finalized LTC entity resolution output. This is WIP!!
     ltc_entity_df = pd.read_csv('/Users/julia/Downloads/ltc_entities_resolved_v1_3.csv')
     ltc_entity_df.fillna('', inplace=True)
 
@@ -94,5 +94,6 @@ def post_processing(df, close_unknown_outbreaks=False):
         df['Outbrk_Status'].fillna('Closed', inplace=True)
 
     df.sort_values(
-        by=['Facility', 'County', 'City', 'State_Facility_Type', 'Date'], ignore_index=True, inplace=True)
+        by=['Facility', 'County', 'City', 'State_Facility_Type', 'ctp_id', 'Date'],
+        ignore_index=True, inplace=True)
     return df

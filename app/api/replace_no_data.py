@@ -18,10 +18,7 @@ def replace_no_data(df):
     no_data = df[df[cume_cols].isin(_NO_DATA).any(1)]
 
     for index, row in no_data.iterrows():
-        facility = df.loc[
-                    (df.Facility == row.Facility) &
-                    (df.County == row.County) &
-                    (df.City == row.City)]
+        facility = df.loc[df.ctp_id == row.ctp_id]
 
         prev_dates = [x for x in set(facility.Date) if x < row.Date]
         if len(prev_dates) == 0:
@@ -35,9 +32,7 @@ def replace_no_data(df):
 
         prev_row = df.loc[
             (df.Date == most_recent_date) &
-            (df.Facility == row.Facility) &
-            (df.County == row.County) &
-            (df.City == row.City)].iloc[0]
+            (df.ctp_id == row.ctp_id)].iloc[0]
 
         for col in cume_cols:
             if row[col] in _NO_DATA:
