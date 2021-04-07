@@ -63,7 +63,9 @@ def standardize_data(df):
 # Modifies in place, but also returns a DataFrame so it can be used as a function in process.py.
 def add_ctp_id(df):
     # TODO: have this read a CSV from some finalized LTC entity resolution output. This is WIP!!
-    ltc_entity_df = pd.read_csv('/Users/julia/Downloads/ltc_entities_resolved_v1_3.csv')
+    # ltc_entity_df = pd.read_csv('/Users/julia/Downloads/ltc_entities_resolved_v1_3.csv')
+    ltc_entity_url = 'https://docs.google.com/spreadsheets/d/1TUAeu6jOHCLIfh_4BDbVCYoz0VTbdapfeWIUvVFM624/gviz/tq?tqx=out:csv&sheet=ltc_entities_resolved_v1_5'
+    ltc_entity_df = pd.read_csv(ltc_entity_url)
     ltc_entity_df.fillna('', inplace=True)
 
     # for this particular state, construct a lookup of:
@@ -79,7 +81,10 @@ def add_ctp_id(df):
     # look up CTP ID for the given DF row using Facility, City, County, State, CTP_Facility_Type
     def get_ctp_id(row):
         key = (row.Facility, row.City, row.County, row.State, row.CTP_Facility_Type)
-        return ctp_id_lookup.get(key)
+        ctp_id = ctp_id_lookup.get(key)
+        if not ctp_id:
+            raise ValueError('No matching ctp_id for key: %s' % key)
+        return ctp_id
 
     df['ctp_id'] = df.apply(get_ctp_id, axis=1)
     return df

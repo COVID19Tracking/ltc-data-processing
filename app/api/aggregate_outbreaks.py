@@ -256,15 +256,21 @@ def sum_outbreaks(df):
 ####################################################################################################
 
 
+def get_row_descriptor_for_df_group(df_group):
+    row_descriptor = '%s %s %s %s %s' % (
+        set(df_group['Facility']),
+        set(df_group['State_Facility_Type']),
+        set(df_group['County']),
+        set(df_group['ctp_id']),
+        set(df_group['Date']))
+    return row_descriptor
+
+
 # takes a dataframe containing the same facility name/date data and collapses the rows.
 # Finds conceptually paired columns based on the content of col_map.
 def collapse_rows_new_header_names(df_group, col_map, add_outbreak_and_cume=True):
     new_df_subset = df_group.loc[df_group['Outbrk_Status'] == 'OPEN'].copy()
-    row_descriptor = '%s %s %s %s' % (
-        set(new_df_subset['Facility']),
-        set(new_df_subset['State_Facility_Type']),
-        set(new_df_subset['County']), 
-        set(new_df_subset['Date']))
+    row_descriptor = get_row_descriptor_for_df_group(new_df_subset)
 
     # expecting only one row/open outbreak; if this isn't true, check that the columns are the same
     if new_df_subset.shape[0] > 1:
@@ -320,13 +326,10 @@ def combine_open_closed_info_do_not_add(df_group, col_map, restrict_facility_typ
     if df_group.shape[0] != 2:  # only dealing with cases where there are 2 rows we need to collapse
         return df_group
     new_df_subset = df_group.head(1)
-    row_descriptor = '%s %s %s %s' % (
-        set(new_df_subset['Facility']),
-        set(new_df_subset['State_Facility_Type']),
-        set(new_df_subset['County']),
-        set(new_df_subset['Date']))
+    row_descriptor = get_row_descriptor_for_df_group(new_df_subset)
     facility_type = set(df_group.State_Facility_Type).pop()
-    if restrict_facility_types and facility_type not in ['RESIDENTIAL CARE', 'RCFE']:
+
+    if restrict_facility_types and facility_type.upper() not in ['RESIDENTIAL CARE', 'RCFE']:
         return df_group
     
     # if the rows are the same, return just one of them
