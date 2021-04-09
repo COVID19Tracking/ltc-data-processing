@@ -96,7 +96,7 @@ def find_date_duplicates(df_group, col_map, errors):
 
 def do_quality_checks(df):
     errors = []
-    utils.standardize_data(df)
+    utils.standardize_data(df, run_add_ctp_id=False)
     col_map = utils.make_matching_column_name_map(df)
 
     # check for duplicate open outbreaks
