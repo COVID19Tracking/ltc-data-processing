@@ -33,15 +33,22 @@ def make_matching_column_name_map(df):
 
 
 # Uppercases county/city/facility/outbreak status entries, for easier comparison. Modifies in place
-def standardize_data(df):
-    df[['County', 'City', 'Facility', 'Outbrk_Status', 'State_Facility_Type', 'CTP_Facility_Type']] = \
-        df[['County', 'City', 'Facility', 'Outbrk_Status', 'State_Facility_Type', 'CTP_Facility_Type']].fillna(value='')
-    for colname in ['County', 'City', 'Facility', 'Outbrk_Status', 'State_Facility_Type', 'CTP_Facility_Type']:
-        df[colname] = df[colname].str.upper().str.strip()
-
-    # drop any rows with empty dates
+def standardize_data(df, run_add_ctp_id=True):
+    # drop any rows with empty facility names or dates
+    df.drop(df[pd.isnull(df['Facility'])].index, inplace = True)
     df.drop(df[pd.isnull(df['Date'])].index, inplace = True)
     df['Date'] = df['Date'].astype(int)
+
+    for colname in ['County', 'City', 'State', 'Facility', 'Outbrk_Status',
+                    'State_Facility_Type', 'CTP_Facility_Type']:
+        df[colname] = df[colname].fillna('')
+        df[colname] = df[colname].str.upper().str.strip()
+        # convert random numbers of spaces into one
+        df[colname] = df[colname].apply(lambda x: ' '.join(str(x).upper().split()))
+
+    # add a ctp_id column for every row (this will crash if no match is found, which we want)
+    if run_add_ctp_id:
+        add_ctp_id(df)
 
     for colname in ['Facility', 'County', 'City']:
         # remove newlines from facility names
@@ -51,9 +58,6 @@ def standardize_data(df):
         df[colname] = df[colname].str.replace('Ͳ','-')
         df[colname] = df[colname].str.replace('‐', '-')  # insane ascii stuff
 
-        # convert random numbers of spaces into one
-        df[colname] = df[colname].apply(lambda x: ' '.join(str(x).upper().split()))
-
     # drop full duplicates
     df.drop_duplicates(inplace=True)
 
@@ -62,10 +66,9 @@ def standardize_data(df):
 
 # Modifies in place, but also returns a DataFrame so it can be used as a function in process.py.
 def add_ctp_id(df):
-    # TODO: have this read a CSV from some finalized LTC entity resolution output. This is WIP!!
-    # ltc_entity_df = pd.read_csv('/Users/julia/Downloads/ltc_entities_resolved_v1_3.csv')
-    ltc_entity_url = 'https://docs.google.com/spreadsheets/d/1TUAeu6jOHCLIfh_4BDbVCYoz0VTbdapfeWIUvVFM624/gviz/tq?tqx=out:csv&sheet=ltc_entities_resolved_v1_5'
-    ltc_entity_df = pd.read_csv(ltc_entity_url)
+    # this is ltc_entities_resolved_v1_7
+    ltc_entity_url = 'https://docs.google.com/spreadsheets/d/1u1F_vI1MHSWKuMdXauV-yUemIeDYJqLanrpUQOznb6A/edit#gid=1120625971'
+    ltc_entity_df = pd.read_csv(csv_url_for_sheets_url(ltc_entity_url))
     ltc_entity_df.fillna('', inplace=True)
 
     # for this particular state, construct a lookup of:
@@ -83,7 +86,7 @@ def add_ctp_id(df):
         key = (row.Facility, row.City, row.County, row.State, row.CTP_Facility_Type)
         ctp_id = ctp_id_lookup.get(key)
         if not ctp_id:
-            raise ValueError('No matching ctp_id for key: %s' % key)
+            raise ValueError('No matching ctp_id for key: %s' % str(key))
         return ctp_id
 
     df['ctp_id'] = df.apply(get_ctp_id, axis=1)

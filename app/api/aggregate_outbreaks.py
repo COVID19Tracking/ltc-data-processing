@@ -361,7 +361,7 @@ def combine_open_closed_info_do_not_add(df_group, col_map, restrict_facility_typ
 def collapse_facility_rows_no_adding(df,
         restrict_facility_types=False):
     col_map = utils.make_matching_column_name_map(df)
-    processed_df = df.groupby(['ctp_id'], as_index=False).apply(
+    processed_df = df.groupby(['Date', 'ctp_id'], as_index=False).apply(
         lambda x: combine_open_closed_info_do_not_add(
             x, col_map, restrict_facility_types=restrict_facility_types))
     return processed_df
