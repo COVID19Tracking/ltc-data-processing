@@ -10,7 +10,7 @@ import pandas as pd
 from time import time
 
 from app.api import utils, aggregate_outbreaks, close_outbreaks, data_quality_checks, \
-    unreset_cumulative, replace_no_data, check_cumulative
+    unreset_cumulative, replace_no_data, check_cumulative, drop_no_data
 
 
 _FUNCTION_LISTS = {
@@ -56,11 +56,7 @@ _FUNCTION_LISTS = {
     'MD': [utils.standardize_data, utils.post_processing],
     'ME': [utils.standardize_data, aggregate_outbreaks.collapse_outbreak_rows, utils.post_processing],
     'MI': [utils.standardize_data, utils.post_processing],
-    'MN': [
-        utils.standardize_data,
-        lambda df: aggregate_outbreaks.collapse_facility_rows_no_adding(
-            df, use_facility_type_to_group=False),
-        utils.post_processing],
+    'MN': [utils.standardize_data, drop_no_data.drop_no_data, utils.post_processing],
     'MO': [utils.standardize_data, utils.post_processing],
     'MS': [utils.standardize_data, utils.post_processing],
     'NC': [utils.standardize_data, close_outbreaks.close_outbreaks, utils.post_processing],
