@@ -58,7 +58,9 @@ def process(states, overwrite_final_gsheet, out_sheet_url, outdir):
 @click.option('--states', default='ALL', help='State abbreviations to run for, e.g. "ME,DE"')
 @click.option('--outdir', default='',
     help='Write the erroring rows to a CSV file in this local directory')
-def check(states, outdir):
+@click.option('--use-local-files', is_flag=True,
+    help='If present, will read the outputs from "<outdir>/*_processed.csv" instead of sheets')
+def check(states, outdir, use_local_files):
     """Checks all data from the final sheet in the input states as defined in the Sheet of Sheets.
 
     States is expected to be a comma-separated list of state abbreviations like "ME,DE". If this
@@ -67,4 +69,4 @@ def check(states, outdir):
     The resulting output if any duplicate outbreak rows exist are saved as a CSV to a local
     directory (--outdir).
     """
-    process_module.cli_check_state(states, outdir=outdir)
+    process_module.cli_check_state(states, outdir=outdir, use_local_files=use_local_files)
