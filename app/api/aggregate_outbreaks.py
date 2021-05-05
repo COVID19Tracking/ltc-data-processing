@@ -341,13 +341,13 @@ def combine_open_closed_info_do_not_add(df_group, col_map, restrict_facility_typ
     # start with the "open" outbreak row, copy over cumulative data from the other row
     open_row_df = df_group.loc[df_group['Outbrk_Status'] == 'OPEN'].copy()
 
-    # if there are multiple non open rows, log and return
-    if(open_row_df.shape[0] < 1):
-        flask.current_app.logger.info(
-                'Multiple non-open rows with different data: %s' % row_descriptor)
+    # if there are no open rows, log and return
+    if open_row_df.empty:
+        flask.current_app.logger.debug(
+                'No open rows: %s' % row_descriptor)
         return df_group
     # if there are multiple open rows, log and return
-    elif(open_row_df.shape[0] > 1):
+    elif open_row_df.shape[0] > 1:
         flask.current_app.logger.info(
                 'Multiple open rows with different data: %s' % row_descriptor)
         return df_group

@@ -42,17 +42,19 @@ def check_cumulative(df, onlyThisWeek=False):
 
             for col in cume_cols:
                 try:
-                    int(f_row[col])
+                    cur_val = int(float(f_row[col]))
+                    prev_val = int(float(facility.loc[f_index-1, col]))
                 except Exception:  # not an int, but ignore for purposes of this script
                     continue
-                if int(f_row[col]) != -1 and int(f_row[col]) < int(facility.loc[f_index-1, col]):
+
+                if cur_val != -1 and cur_val < prev_val:
                     row_to_write = {'State': f_row['State'],
                         'Facility': f_row['Facility'],
                         'Date': f_row['Date'],
                         'cumulative_field_decreased': col,
-                        'current_cumulative_value': int(f_row[col]),
+                        'current_cumulative_value': cur_val,
                         'Prev Date': facility.loc[f_index-1, 'Date'],
-                        'prev_cumulative_value': int(facility.loc[f_index-1, col]),
+                        'prev_cumulative_value': prev_val,
                         'CTP_Facility_Type': f_row['CTP_Facility_Type'],
                         'ctp_id': f_row['ctp_id'],
                         }

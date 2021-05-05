@@ -66,8 +66,7 @@ def standardize_data(df, run_add_ctp_id=True):
 
 # Modifies in place, but also returns a DataFrame so it can be used as a function in process.py.
 def add_ctp_id(df):
-    # this is ltc_entities_resolved_v1_7
-    ltc_entity_url = 'https://docs.google.com/spreadsheets/d/1u1F_vI1MHSWKuMdXauV-yUemIeDYJqLanrpUQOznb6A/edit#gid=1120625971'
+    ltc_entity_url = 'https://docs.google.com/spreadsheets/d/1kea4HHoc56pk3SeA2RcO_l_Rfu5RUsQsoeFvLDdpoLs/edit#gid=165417819'
     ltc_entity_df = pd.read_csv(csv_url_for_sheets_url(ltc_entity_url))
     ltc_entity_df.fillna('', inplace=True)
 
