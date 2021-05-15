@@ -40,7 +40,5 @@ def fill_missing_dates(df):
             missing_dates_dfs.append(data)
 
     processed_df = pd.concat([df, *missing_dates_dfs])
-    processed_df.sort_values(
-        by=['Facility', 'County', 'City', 'Date'], ignore_index=True, inplace=True)
 
     return processed_df

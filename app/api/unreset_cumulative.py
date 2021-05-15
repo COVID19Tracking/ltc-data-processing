@@ -69,7 +69,7 @@ def update_ky_2021_data(df_group, col_map, dates_2021, early_disappeared_facilit
     
         df_group = pd.concat([df_group, replicated_row_df])
         df_group.sort_values(
-            by=['Date', 'County', 'City', 'Facility'], inplace=True, ignore_index=True)
+            by=['Date', 'ctp_id'], inplace=True, ignore_index=True)
 
     # within each group, take the case/death numbers as of 20201231. Use that as the base number for
     # when they reset in 2021. Set each 2021 cumulative value to the sum of what's there now and
@@ -95,10 +95,8 @@ def really_update_ky_2021_data(df):
 
     # group facilities and update each group as needed
     early_disappeared_facilities = set()
-    processed_df = df.groupby(['County', 'City', 'Facility'], as_index=False).apply(
+    processed_df = df.groupby(['ctp_id'], as_index=False).apply(
         lambda x: update_ky_2021_data(x, col_map, dates_2021, early_disappeared_facilities))
-    processed_df.sort_values(
-        by=['Date', 'County', 'City', 'Facility'], inplace=True, ignore_index=True)
 
     # log which facilities disappeared before 20201231
     if len(early_disappeared_facilities) > 0:

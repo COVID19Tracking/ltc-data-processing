@@ -28,7 +28,7 @@ def test_close_outbreaks():
 
     os.remove(temp_file.name)
 
-def test_fill_in_mising_dates_non_thursday():
+def test_fill_in_missing_dates_non_thursday():
     test_csv = "tests/app/fixtures/state_with_missing_date_not_a_thursday.csv"
     df = pd.read_csv(test_csv)
     filled = fill_missing_dates(df)

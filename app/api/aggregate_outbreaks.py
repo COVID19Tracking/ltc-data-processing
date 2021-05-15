@@ -173,7 +173,7 @@ def clear_non_nh_cms_ids_FL(df):
 def nj_special_aggregator(df):
     def process_facility(df):
         col_map = utils.make_matching_column_name_map(df)
-        df.sort_values(by=['Date', 'County', 'City', 'Facility'], inplace=True, ignore_index=True)
+        df.sort_values(by=['Date', 'ctp_id'], inplace=True, ignore_index=True)
 
         # look for a closed row starting at 2/11 where the previous week was open
         # and copy out the outbreak data from the previous week
@@ -200,7 +200,7 @@ def nj_special_aggregator(df):
         return df
 
     df = df.groupby(
-        ['Facility', 'County', 'State_Facility_Type'], as_index=False).apply(process_facility)
+        ['ctp_id'], as_index=False).apply(process_facility)
     return df
 
 
@@ -247,7 +247,7 @@ def sum_outbreaks(df):
     df = fill_missing_dates.fill_missing_dates(df)
     df['Outbrk_Status'].fillna('Closed', inplace=True)
     processed_df = df.groupby(
-        ['Facility', 'County', 'State_Facility_Type'], as_index=False).apply(process_sum_outbreaks)
+        ['ctp_id'], as_index=False).apply(process_sum_outbreaks)
     return processed_df
 
 
@@ -256,15 +256,21 @@ def sum_outbreaks(df):
 ####################################################################################################
 
 
+def get_row_descriptor_for_df_group(df_group):
+    row_descriptor = '%s %s %s %s %s' % (
+        set(df_group['Facility']),
+        set(df_group['State_Facility_Type']),
+        set(df_group['County']),
+        set(df_group['ctp_id']),
+        set(df_group['Date']))
+    return row_descriptor
+
+
 # takes a dataframe containing the same facility name/date data and collapses the rows.
 # Finds conceptually paired columns based on the content of col_map.
 def collapse_rows_new_header_names(df_group, col_map, add_outbreak_and_cume=True):
     new_df_subset = df_group.loc[df_group['Outbrk_Status'] == 'OPEN'].copy()
-    row_descriptor = '%s %s %s %s' % (
-        set(new_df_subset['Facility']),
-        set(new_df_subset['State_Facility_Type']),
-        set(new_df_subset['County']), 
-        set(new_df_subset['Date']))
+    row_descriptor = get_row_descriptor_for_df_group(new_df_subset)
 
     # expecting only one row/open outbreak; if this isn't true, check that the columns are the same
     if new_df_subset.shape[0] > 1:
@@ -307,12 +313,10 @@ def collapse_outbreak_rows(df, add_outbreak_and_cume=True):
     col_map = utils.make_matching_column_name_map(df)
     # group by facility name and date, collapse each group into one row
     processed_df = df.groupby(
-        ['Date', 'Facility', 'County', 'State_Facility_Type'], as_index=False).apply(
+        ['Date', 'ctp_id'], as_index=False).apply(
         lambda x: collapse_rows_new_header_names(
             x, col_map, add_outbreak_and_cume=add_outbreak_and_cume))
 
-    processed_df.sort_values(
-        by=['Date', 'County', 'City', 'Facility'], inplace=True, ignore_index=True)
     return processed_df
 
 
@@ -322,13 +326,10 @@ def combine_open_closed_info_do_not_add(df_group, col_map, restrict_facility_typ
     if df_group.shape[0] != 2:  # only dealing with cases where there are 2 rows we need to collapse
         return df_group
     new_df_subset = df_group.head(1)
-    row_descriptor = '%s %s %s %s' % (
-        set(new_df_subset['Facility']),
-        set(new_df_subset['State_Facility_Type']),
-        set(new_df_subset['County']),
-        set(new_df_subset['Date']))
+    row_descriptor = get_row_descriptor_for_df_group(new_df_subset)
     facility_type = set(df_group.State_Facility_Type).pop()
-    if restrict_facility_types and facility_type not in ['RESIDENTIAL CARE', 'RCFE']:
+
+    if restrict_facility_types and facility_type.upper() not in ['RESIDENTIAL CARE', 'RCFE']:
         return df_group
     
     # if the rows are the same, return just one of them
@@ -340,13 +341,13 @@ def combine_open_closed_info_do_not_add(df_group, col_map, restrict_facility_typ
     # start with the "open" outbreak row, copy over cumulative data from the other row
     open_row_df = df_group.loc[df_group['Outbrk_Status'] == 'OPEN'].copy()
 
-    # if there are multiple non open rows, log and return
-    if(open_row_df.shape[0] < 1):
-        flask.current_app.logger.info(
-                'Multiple non-open rows with different data: %s' % row_descriptor)
+    # if there are no open rows, log and return
+    if open_row_df.empty:
+        flask.current_app.logger.debug(
+                'No open rows: %s' % row_descriptor)
         return df_group
     # if there are multiple open rows, log and return
-    elif(open_row_df.shape[0] > 1):
+    elif open_row_df.shape[0] > 1:
         flask.current_app.logger.info(
                 'Multiple open rows with different data: %s' % row_descriptor)
         return df_group
@@ -358,16 +359,9 @@ def combine_open_closed_info_do_not_add(df_group, col_map, restrict_facility_typ
 
 
 def collapse_facility_rows_no_adding(df,
-        restrict_facility_types=False,
-        use_facility_type_to_group=True):
+        restrict_facility_types=False):
     col_map = utils.make_matching_column_name_map(df)
-
-    if use_facility_type_to_group:
-        group_cols = ['Date', 'Facility', 'County', 'State_Facility_Type']
-    else:
-        group_cols = ['Date', 'Facility', 'County']
-
-    processed_df = df.groupby(group_cols, as_index=False).apply(
+    processed_df = df.groupby(['Date', 'ctp_id'], as_index=False).apply(
         lambda x: combine_open_closed_info_do_not_add(
             x, col_map, restrict_facility_types=restrict_facility_types))
     return processed_df

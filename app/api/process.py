@@ -57,11 +57,10 @@ _FUNCTION_LISTS = {
     'MN': [utils.standardize_data, drop_no_data.drop_no_data, utils.post_processing],
     'MO': [utils.standardize_data, utils.post_processing],
     'MS': [utils.standardize_data, utils.post_processing],
-    'NC': [utils.standardize_data, close_outbreaks.close_outbreaks, utils.post_processing],
+    'NC': [utils.standardize_data, utils.add_ctp_id, close_outbreaks.close_outbreaks, utils.post_processing],
     'ND': [
         utils.standardize_data,
-        lambda df: aggregate_outbreaks.collapse_facility_rows_no_adding(
-            df, use_facility_type_to_group=False),
+        aggregate_outbreaks.collapse_facility_rows_no_adding,
         utils.post_processing
         ],
     'NJ': [utils.standardize_data,
@@ -146,7 +145,8 @@ def cli_process_state(states, overwrite_final_gsheet=False, out_sheet_url=None, 
             flask.current_app.logger.info('Done.')
 
 
-def cli_check_state(states, outdir=None):
+# If use_local_files is true, will read the outputs from "{outdir}/*_processed.csv" instead of sheets
+def cli_check_state(states, outdir=None, use_local_files=False):
     # get the source sheet
     url_df = utils.get_all_state_urls()
 
@@ -157,9 +157,16 @@ def cli_check_state(states, outdir=None):
     for i, row in url_df.iterrows():
         state = row.State
 
-        url = utils.csv_url_for_sheets_url(row.Final)
-        flask.current_app.logger.info('Checking state %s from url %s' % (state, url))
-        df = pd.read_csv(url)
+        if use_local_files:
+            local_path = os.path.join(outdir, '%s_processed.csv' % state)
+            flask.current_app.logger.info(
+                'Checking state %s from local path %s' % (state, local_path))
+            df = pd.read_csv(local_path)
+        else:
+            url = utils.csv_url_for_sheets_url(row.Final)
+            flask.current_app.logger.info('Checking state %s from url %s' % (state, url))
+            df = pd.read_csv(url)
+
         data_quality_checks.check_data_types(df)
         errors_df = data_quality_checks.do_quality_checks(df)
         cume_check_df = check_cumulative.check_cumulative(df)

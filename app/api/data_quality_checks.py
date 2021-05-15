@@ -96,12 +96,12 @@ def find_date_duplicates(df_group, col_map, errors):
 
 def do_quality_checks(df):
     errors = []
-    utils.standardize_data(df)
+    utils.standardize_data(df, run_add_ctp_id=False)
     col_map = utils.make_matching_column_name_map(df)
 
     # check for duplicate open outbreaks
     df.groupby(
-        ['Date', 'Facility', 'County', 'City', 'State_Facility_Type'], as_index=False).apply(
+        ['Date', 'ctp_id'], as_index=False).apply(
         lambda x: find_duplicates(x, col_map, errors))
 
     # check for duplicate data on the same date

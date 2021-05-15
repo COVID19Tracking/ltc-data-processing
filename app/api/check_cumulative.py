@@ -12,12 +12,13 @@ def check_cumulative(df, onlyThisWeek=False):
     fieldnames = [
         'State',
         'Facility',
-        'cumulative_field_decresed',
+        'cumulative_field_decreased',
         'Date',
         'current_cumulative_value',
         'Prev Date',
         'prev_cumulative_value',
-        'CTP_Facility_Type'
+        'CTP_Facility_Type',
+        'ctp_id'
     ]
 
     errors = pd.DataFrame(columns=fieldnames)
@@ -28,16 +29,11 @@ def check_cumulative(df, onlyThisWeek=False):
     extra_data_standardization(df, state_name)
 
     this_week = df['Date'].max()
-    facilities = df[['Facility', 'County', 'City', 'CTP_Facility_Type']].drop_duplicates()
+    facilities = df[['ctp_id']].drop_duplicates()
     cume_cols = [x for x in df.columns if x.startswith('Cume_')]
 
     for _, row in facilities.iterrows():
-        facility = df.loc[
-            (df.Facility == row.Facility) &
-            (df.County == row.County) &
-            (df.City == row.City) &
-            (df.CTP_Facility_Type == row.CTP_Facility_Type)].reset_index()
-
+        facility = df.loc[df.ctp_id == row.ctp_id].reset_index()
         facility = facility.sort_values(by=['Date']).reset_index()
 
         for f_index, f_row in facility.iterrows():
@@ -46,18 +42,22 @@ def check_cumulative(df, onlyThisWeek=False):
 
             for col in cume_cols:
                 try:
-                    int(f_row[col])
+                    cur_val = int(float(f_row[col]))
+                    prev_val = int(float(facility.loc[f_index-1, col]))
                 except Exception:  # not an int, but ignore for purposes of this script
                     continue
-                if int(f_row[col]) != -1 and int(f_row[col]) < int(facility.loc[f_index-1, col]):
+
+                if cur_val != -1 and cur_val < prev_val:
                     row_to_write = {'State': f_row['State'],
                         'Facility': f_row['Facility'],
                         'Date': f_row['Date'],
-                        'cumulative_field_decresed': col,
-                        'current_cumulative_value': int(f_row[col]),
+                        'cumulative_field_decreased': col,
+                        'current_cumulative_value': cur_val,
                         'Prev Date': facility.loc[f_index-1, 'Date'],
-                        'prev_cumulative_value': int(facility.loc[f_index-1, col]),
-                        'CTP_Facility_Type': f_row['CTP_Facility_Type']}
+                        'prev_cumulative_value': prev_val,
+                        'CTP_Facility_Type': f_row['CTP_Facility_Type'],
+                        'ctp_id': f_row['ctp_id'],
+                        }
 
                     if not onlyThisWeek or (onlyThisWeek and f_row['Date'] == this_week):
                         errors = errors.append(row_to_write, ignore_index=True)
