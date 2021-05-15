@@ -1,9 +1,9 @@
-Date,State,County,City,Facility,State_Facility_Type,CTP_Facility_Type,Regulate,State_ID,CMS_ID,Outbrk_Open,Outbrk_Closed,Outbrk_Status,Res_Census,Cume_Res_Pos,Cume_Res_ProbPos,Cume_Res_Death,Cume_Res_ProbDeath,Cume_Staff_Pos,Cume_Staff_ProbPos,Cume_Staff_Death,Cume_Staff_ProbDeath,Cume_ResStaff_Pos,Cume_ResStaff_ProbPos,Cume_ResStaff_Death,Cume_ResStaff_ ProbDeath,Outbrk_Res_Pos,Outbrk_Res_ProbPos,Outbrk_Res_Death,Outbrk_Res_ProbDeath,Outbrk_Staff_Pos,Outbrk_Staff_ProbPos,Outbrk_Staff_Death,Outbrk_Staff_ProbDeath,Outbrk_ResStaff_Pos,Outbrk_ResStaff_ProbPos,Outbrk_ResStaff_Death,Outbrk_ResStaff_ProbDeath,Res_Test,Staff_Test,PPE,last_recorded
-first-outbreak-date,NM,,,nursing-home-1,Nursing Home,Nursing Home,Federal,, ,,,Open,,18,,23,,3,,,,,,,,,,,,,,,,,,,,,,,first-outbreak-date
-first-outbreak-date,NM,,,nursing-home-2,Nursing Home,Nursing Home,Federal,, ,,,Open,,18,,23,,3,,,,,,,,,,,,,,,,,,,,,,,first-outbreak-date
-second-outbreak-date,NM,,,nursing-home-1,Nursing Home,Nursing Home,Federal,, ,,,Open,,18,,23,,3,,,,,,,,,,,,,,,,,,,,,,,second-outbreak-date
-second-outbreak-date,NM,,,nursing-home-3,Nursing Home,Nursing Home,Federal,, ,,,Open,,18,,23,,3,,,,,,,,,,,,,,,,,,,,,,,second-outbreak-date
-second-outbreak-date,NM,,,nursing-home-2,Nursing Home,Nursing Home,Federal,, ,,,Closed,,18,,23,,3,,,,,,,,,,,,,,,,,,,,,,,first-outbreak-date
-third-outbreak-date,NM,,,nursing-home-2,Nursing Home,Nursing Home,Federal,, ,,,Open,,100,,100,,100,,,,,,,,,,,,,,,,,,,,,,,third-outbreak-date
-third-outbreak-date,NM,,,nursing-home-1,Nursing Home,Nursing Home,Federal,, ,,,Closed,,18,,23,,3,,,,,,,,,,,,,,,,,,,,,,,second-outbreak-date
-third-outbreak-date,NM,,,nursing-home-3,Nursing Home,Nursing Home,Federal,, ,,,Closed,,18,,23,,3,,,,,,,,,,,,,,,,,,,,,,,second-outbreak-date
+Date,State,County,City,Facility,State_Facility_Type,CTP_Facility_Type,Regulate,State_ID,CMS_ID,Outbrk_Open,Outbrk_Closed,Outbrk_Status,Res_Census,Cume_Res_Pos,Cume_Res_ProbPos,Cume_Res_Death,Cume_Res_ProbDeath,Cume_Staff_Pos,Cume_Staff_ProbPos,Cume_Staff_Death,Cume_Staff_ProbDeath,Cume_ResStaff_Pos,Cume_ResStaff_ProbPos,Cume_ResStaff_Death,Cume_ResStaff_ ProbDeath,Outbrk_Res_Pos,Outbrk_Res_ProbPos,Outbrk_Res_Death,Outbrk_Res_ProbDeath,Outbrk_Staff_Pos,Outbrk_Staff_ProbPos,Outbrk_Staff_Death,Outbrk_Staff_ProbDeath,Outbrk_ResStaff_Pos,Outbrk_ResStaff_ProbPos,Outbrk_ResStaff_Death,Outbrk_ResStaff_ProbDeath,Res_Test,Staff_Test,PPE,ctp_id,last_recorded
+first-outbreak-date,NM,,,nursing-home-1,Nursing Home,Nursing Home,Federal,, ,,,Open,,18,,23,,3,,,,,,,,,,,,,,,,,,,,,,,1,first-outbreak-date
+first-outbreak-date,NM,,,nursing-home-2,Nursing Home,Nursing Home,Federal,, ,,,Open,,18,,23,,3,,,,,,,,,,,,,,,,,,,,,,,2,first-outbreak-date
+second-outbreak-date,NM,,,nursing-home-1,Nursing Home,Nursing Home,Federal,, ,,,Open,,18,,23,,3,,,,,,,,,,,,,,,,,,,,,,,1,second-outbreak-date
+second-outbreak-date,NM,,,nursing-home-3,Nursing Home,Nursing Home,Federal,, ,,,Open,,18,,23,,3,,,,,,,,,,,,,,,,,,,,,,,3,second-outbreak-date
+second-outbreak-date,NM,,,nursing-home-2,Nursing Home,Nursing Home,Federal,, ,,,Closed,,18,,23,,3,,,,,,,,,,,,,,,,,,,,,,,2,first-outbreak-date
+third-outbreak-date,NM,,,nursing-home-2,Nursing Home,Nursing Home,Federal,, ,,,Open,,100,,100,,100,,,,,,,,,,,,,,,,,,,,,,,2,third-outbreak-date
+third-outbreak-date,NM,,,nursing-home-1,Nursing Home,Nursing Home,Federal,, ,,,Closed,,18,,23,,3,,,,,,,,,,,,,,,,,,,,,,,1,second-outbreak-date
+third-outbreak-date,NM,,,nursing-home-3,Nursing Home,Nursing Home,Federal,, ,,,Closed,,18,,23,,3,,,,,,,,,,,,,,,,,,,,,,,3,second-outbreak-date
