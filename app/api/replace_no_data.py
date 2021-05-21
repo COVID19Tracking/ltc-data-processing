@@ -22,7 +22,7 @@ def replace_no_data(df):
         df[col] = df[col].str.lower()
 
     # sort the no-data rows in chronological order so we fix them from the bottom up
-    no_data = df[df[cume_cols].isin(_NO_DATA).any(1)].sort_values('Date')
+    no_data = df[df[data_cols].isin(_NO_DATA).any(1)].sort_values('Date')
 
     for index, row in no_data.iterrows():
         facility = df.loc[df.ctp_id == row.ctp_id]
