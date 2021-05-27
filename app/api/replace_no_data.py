@@ -11,10 +11,14 @@ import pandas as pd
 
 from app.api import utils
 
-_NO_DATA = {'NO DATA', 'Not Reported', 'Data Pending', 'Closed'}
+#_NO_DATA = {'NO DATA', 'Not Reported', 'Data Pending', 'Closed'}
+_NO_DATA = {'no data', 'nd', 'not reported', 'data pending', 'closed'}
 
 def replace_no_data(df):
     cume_cols = [x for x in df.columns if x.startswith('Cume_')]
+    # lowercase values so that the no-data search is case insensitive
+    for col in cume_cols:
+        df[col] = df[col].astype(str).str.lower()
     
     # sort the no-data rows in chronological order so we fix them from the bottom up
     no_data = df[df[cume_cols].isin(_NO_DATA).any(1)].sort_values('Date')

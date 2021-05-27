@@ -138,4 +138,8 @@ logs/
 
 .DS_Store
 outputs/*.csv
-*.ipynb
+# *.ipynb
+
+cms.csv
+ltc.zip
+
